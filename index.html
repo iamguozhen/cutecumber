@@ -324,6 +324,53 @@
         .toggle-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .toggle-btn.active { background: var(--color-card-bg); color: var(--color-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; } .calendar-title { font-size: 18px; font-weight: 800; color: var(--color-text); } .calendar-nav-btn { background: none; border: none; padding: 5px 15px; font-size: 20px; color: var(--color-primary); cursor: pointer; } .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; } .calendar-day { aspect-ratio: 1; border-radius: 10px; background: var(--color-card-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: var(--color-text); border: 1px solid transparent; cursor: pointer; } .calendar-day.today { border-color: var(--color-accent); color: var(--color-accent); font-weight: bold; } .calendar-day.has-record { background: rgba(118, 200, 70, 0.12); color: #2e7d32; } .calendar-drops { display: flex; gap: 2px; margin-top: 2px; height: 4px; } .drop-dot { width: 4px; height: 4px; background-color: var(--color-primary); border-radius: 50%; }
+        /* === 日曆熱力圖配色 === */
+
+/* 基礎樣式微調 */
+.calendar-day {
+    transition: background-color 0.2s, color 0.2s;
+    border: 1px solid transparent; /* 保持邊框位置 */
+}
+
+/* 1. 自慰等級 (綠色系) */
+/* 1次：淺綠 */
+.calendar-day.level-1 { 
+    background-color: rgba(118, 200, 70, 0.25); 
+    color: var(--color-text); 
+}
+/* 2次：中綠 (文字變白以利閱讀) */
+.calendar-day.level-2 { 
+    background-color: rgba(118, 200, 70, 0.65); 
+    color: #fff !important; 
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+/* 3次以上：深綠 (主色) */
+.calendar-day.level-3 { 
+    background-color: var(--color-primary); /* #76C846 */
+    color: #fff !important; 
+    font-weight: 900;
+    box-shadow: 0 2px 5px rgba(118, 200, 70, 0.4);
+}
+
+/* 2. 做愛 (粉紅色) */
+.calendar-day.type-sex {
+    background-color: var(--color-accent); /* #FF69B4 */
+    color: #fff !important;
+    font-weight: 900;
+    box-shadow: 0 2px 5px rgba(255, 105, 180, 0.4);
+}
+
+/* 3. 夢遺 (淺藍色) */
+.calendar-day.type-wet {
+    background-color: #89CFF0; /* 淺天空藍 */
+    color: #fff !important;
+}
+
+/* 移除原本的點點樣式 (如果還在的話可以刪除，或用這行隱藏) */
+.calendar-drops { display: none !important; }
+
+/* Dark Mode 微調 (確保深色模式下文字依然清晰) */
+body.dark-mode .calendar-day.level-1 { color: #fff; background-color: rgba(118, 200, 70, 0.35); }
         /* === 日記列表樣式優化版 (請直接取代舊的) === */
 
 .diary-card { 
@@ -2583,25 +2630,57 @@
         function renderCalendar() {
             const y = currentCalendarDate.getFullYear(), m = currentCalendarDate.getMonth();
             document.getElementById('calendar-title').textContent = `${y} 年 ${m + 1} 月`;
-            const fd = new Date(y, m, 1).getDay(), dim = new Date(y, m + 1, 0).getDate(), c = document.getElementById('calendar-days-container');
+            
+            const fd = new Date(y, m, 1).getDay();
+            const dim = new Date(y, m + 1, 0).getDate();
+            const c = document.getElementById('calendar-days-container');
+            
             c.innerHTML = '';
-            const t = new Date(), isCm = t.getFullYear() === y && t.getMonth() === m;
+            
+            const t = new Date();
+            const isCm = t.getFullYear() === y && t.getMonth() === m;
+
+            // 填補月初的空白
             for (let i = 0; i < fd; i++) c.appendChild(document.createElement('div'));
+
+            // 產生日期格子
             for (let d = 1; d <= dim; d++) {
                 const cell = document.createElement('div');
                 cell.className = 'calendar-day';
+                
+                // 標記今天
                 if (isCm && d === t.getDate()) cell.classList.add('today');
+
+                // 找出這天的所有紀錄
                 const dr = ejaculationRecords.filter(r => {
                     const rd = new Date(r.timestamp);
                     return rd.getFullYear() === y && rd.getMonth() === m && rd.getDate() === d;
                 });
+
+                // 決定顯示內容與顏色
                 if (dr.length > 0) {
-                    cell.classList.add('has-record');
-                    cell.innerHTML = `<span>${d}</span><div class="calendar-drops">${Array(Math.min(dr.length, 3)).fill('<div class="drop-dot"></div>').join('')}</div>`;
+                    // 優先級邏輯：做愛 > 夢遺 > 自慰次數
+                    const hasSex = dr.some(r => r.type === '做愛');
+                    const hasWet = dr.some(r => r.type === '夢遺');
+                    const count = dr.length;
+
+                    if (hasSex) {
+                        cell.classList.add('type-sex'); // 粉紅色
+                    } else if (hasWet) {
+                        cell.classList.add('type-wet'); // 淺藍色
+                    } else {
+                        // 純自慰：根據次數決定綠色深淺
+                        if (count >= 3) cell.classList.add('level-3');      // 深綠
+                        else if (count === 2) cell.classList.add('level-2'); // 中綠
+                        else cell.classList.add('level-1');                  // 淺綠
+                    }
+
+                    // 點擊事件
                     cell.onclick = () => dr.length === 1 ? openDetailModal(dr[0].id) : openDailyListModal(y, m, d, dr);
-                } else {
-                    cell.innerHTML = `<span>${d}</span>`;
                 }
+                
+                // 填入日期數字 (不再顯示點點)
+                cell.innerHTML = `<span>${d}</span>`;
                 c.appendChild(cell);
             }
         }
