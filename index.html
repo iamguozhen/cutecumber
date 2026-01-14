@@ -486,6 +486,38 @@
             margin-top: 15px;
             width: 100%;
         }
+        /* === Tier List Styles (排行榜樣式) === */
+        .tier-wrapper { display: flex; flex-direction: column; gap: 4px; border: 1px solid #333; background: #000; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+        .tier-row { display: flex; min-height: 80px; background: #1a1a1a; border-bottom: 1px solid #000; }
+        .tier-row:last-child { border-bottom: none; }
+        .tier-label { width: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); flex-shrink: 0; }
+        .tier-content { flex: 1; display: flex; flex-wrap: wrap; align-items: center; padding: 5px; gap: 5px; background: #222; min-height: 80px; align-content: flex-start; }
+        
+        /* 等級顏色 */
+        .s-tier { background-color: #ff7f7f; color: #7c0000; }
+        .a-tier { background-color: #ffbf7f; color: #7c4800; }
+        .b-tier { background-color: #ffdf7f; color: #7c6800; }
+        .c-tier { background-color: #ffff7f; color: #7c7c00; }
+        .d-tier { background-color: #bfff7f; color: #357c00; }
+
+        /* 待分類區 */
+        .tier-pool { 
+            min-height: 120px; background: var(--color-card-bg); border: 2px dashed #ccc; 
+            border-radius: 12px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; 
+            justify-content: center; align-items: flex-start; transition: background 0.2s; margin-bottom: 50px;
+        }
+        
+        /* 頭像樣式 */
+        .tier-avatar { 
+            width: 55px; height: 55px; border-radius: 8px; object-fit: cover; cursor: grab; 
+            border: 2px solid transparent; transition: transform 0.1s; 
+            -webkit-user-select: none; user-select: none; touch-action: none;
+        }
+        .tier-avatar:active { cursor: grabbing; transform: scale(1.1); border-color: white; z-index: 100; }
+        
+        /* 深色模式修正 */
+        body.dark-mode .tier-pool { background: #2c2c2c; border-color: #555; }
+        body.dark-mode #driver-view-tier h2 { color: #fff; }
     </style>
 </head>
 <body>
@@ -661,7 +693,11 @@
             <div class="driver-header" style="flex-direction:column; align-items:flex-start; gap:10px; margin-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
                     <h1 style="color:var(--color-accent);margin:0;">收藏櫃</h1>
-                    <button id="driver-dice-btn" class="btn-base btn-gold" onclick="rollTheDice()" style="padding:8px 12px; font-size:16px;">🎲</button>
+                    
+                    <div style="display:flex; align-items:center;">
+                         <button id="driver-dice-btn" class="btn-base btn-gold" onclick="rollTheDice()" style="padding:8px 12px; font-size:16px; margin-right:8px;">🎲</button>
+                         <button class="btn-base btn-primary" onclick="openTierList()" style="padding:8px 12px; font-size:16px; background:#444;">🏆</button>
+                    </div>
                 </div>
                 
                 <div class="view-toggle" style="width:100%;">
@@ -709,7 +745,29 @@
                 </div>
                 <div id="video-list-container" class="video-list-container"></div>
             </div>
+            <div id="driver-view-detail" class="view-container">
+            </div>
+
+        <div id="driver-view-tier" class="view-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <button class="btn-base btn-outline" onclick="closeTierList()" style="width:auto; padding:8px 12px;">‹ 返回列表</button>
+                <h2 style="margin:0; font-size:18px; color:#333;">🏆 排行榜</h2>
+                <button class="btn-base btn-primary" onclick="saveTierList()" style="font-size:12px; padding:6px 10px;">💾 儲存</button>
+            </div>
             
+            <div id="tier-container" class="tier-wrapper">
+                <div class="tier-row"><div class="tier-label s-tier">S</div><div class="tier-content" ondrop="drop(event, 'S')" ondragover="allowDrop(event)"></div></div>
+                <div class="tier-row"><div class="tier-label a-tier">A</div><div class="tier-content" ondrop="drop(event, 'A')" ondragover="allowDrop(event)"></div></div>
+                <div class="tier-row"><div class="tier-label b-tier">B</div><div class="tier-content" ondrop="drop(event, 'B')" ondragover="allowDrop(event)"></div></div>
+                <div class="tier-row"><div class="tier-label c-tier">C</div><div class="tier-content" ondrop="drop(event, 'C')" ondragover="allowDrop(event)"></div></div>
+                <div class="tier-row"><div class="tier-label d-tier">D</div><div class="tier-content" ondrop="drop(event, 'D')" ondragover="allowDrop(event)"></div></div>
+            </div>
+
+            <div class="section-header" style="margin-top:20px; font-size:14px; color:#888;">待分類 (未分級)</div>
+            <div id="tier-pool" class="tier-pool" ondrop="drop(event, 'unranked')" ondragover="allowDrop(event)"></div>
+            <div style="text-align:center; color:#aaa; font-size:12px; margin-top:-40px; margin-bottom: 20px;">長按頭像即可移動</div>
+        </div>
+        </section>  <section id="settings">
     </section>
 
         <!-- Settings -->
@@ -4091,6 +4149,129 @@
                 });
             }
         });
+        /* --- Tier List Logic (排行榜功能) --- */
+    let currentTierMode = 'actor'; 
+
+    // 1. 開啟排行榜
+    window.openTierList = function() {
+        // 判斷目前是「雲端情人」還是「性夥伴」模式
+        const btns = document.querySelectorAll('.driver-header .toggle-btn');
+        // 如果第二顆按鈕有 active，代表是 Partner 模式
+        const isPartner = btns[1] && btns[1].classList.contains('active');
+        
+        currentTierMode = isPartner ? 'partner' : 'actor';
+        
+        // 切換畫面：隱藏列表，顯示排行榜
+        document.getElementById('driver-view-list').classList.remove('active');
+        document.getElementById('driver-view-detail').classList.remove('active');
+        document.getElementById('driver-view-tier').classList.add('active');
+        
+        // 更新標題
+        document.querySelector('#driver-view-tier h2').textContent = 
+            currentTierMode === 'actor' ? '☁️ 情人排行榜' : '💞 夥伴排行榜';
+
+        renderTierList();
+    };
+
+    // 2. 關閉排行榜
+    window.closeTierList = function() {
+        document.getElementById('driver-view-tier').classList.remove('active');
+        document.getElementById('driver-view-list').classList.add('active');
+    };
+
+    // 3. 渲染排行榜畫面
+    window.renderTierList = function() {
+        // 清空畫面
+        document.querySelectorAll('.tier-content').forEach(el => el.innerHTML = '');
+        const pool = document.getElementById('tier-pool');
+        pool.innerHTML = '';
+
+        // 取得資料
+        let data = currentTierMode === 'actor' ? actorProfiles : partnerProfiles;
+        
+        // 確保夥伴資料有同步
+        if(currentTierMode === 'partner' && window.syncPartnersFromRecords) window.syncPartnersFromRecords();
+
+        data.forEach(item => {
+            const tier = item.tier || 'unranked'; // 預設為未分級
+            const img = item.avatar || item.photo || DEFAULT_AVATAR;
+            const id = currentTierMode === 'actor' ? item.id : item.name;
+
+            const imgEl = document.createElement('img');
+            imgEl.src = img;
+            imgEl.className = 'tier-avatar';
+            imgEl.draggable = true;
+            
+            // 綁定事件 (手機長按 / 電腦拖曳)
+            imgEl.ontouchstart = (e) => handleTouchStart(e, id);
+            imgEl.ondragstart = (e) => drag(e, id);
+            imgEl.onclick = () => showAlert(`這是：${item.name}`);
+
+            // 放入對應的格子
+            if (['S','A','B','C','D'].includes(tier)) {
+                const map = {'S':0, 'A':1, 'B':2, 'C':3, 'D':4};
+                const container = document.querySelectorAll('.tier-content')[map[tier]];
+                if(container) container.appendChild(imgEl);
+            } else {
+                pool.appendChild(imgEl);
+            }
+        });
+    };
+
+    // --- 拖曳功能 (電腦版) ---
+    let draggedId = null;
+    window.allowDrop = function(ev) { ev.preventDefault(); };
+    window.drag = function(ev, id) { draggedId = id; ev.dataTransfer.setData("text", id); };
+    window.drop = function(ev, targetTier) { ev.preventDefault(); updateTierData(draggedId, targetTier); };
+
+    // --- 更新資料邏輯 ---
+    function updateTierData(id, targetTier) {
+        let dataList = currentTierMode === 'actor' ? actorProfiles : partnerProfiles;
+        let item = null;
+        
+        if (currentTierMode === 'actor') {
+            item = dataList.find(x => x.id == id);
+        } else {
+            item = dataList.find(x => x.name === id);
+        }
+
+        if (item) {
+            item.tier = targetTier;
+            renderTierList(); // 重新整理畫面
+            saveTierList(true); // 自動儲存
+        }
+    }
+
+    // --- 儲存功能 ---
+    window.saveTierList = function(silent = false) {
+        if (currentTierMode === 'actor') saveActorData();
+        else savePartnerData();
+        if(!silent) showAlert('排行榜已儲存！');
+    };
+
+    // --- 手機版操作 (長按跳出選單) ---
+    // 因 iPhone 對網頁拖曳支援度不佳，改用長按選單最穩定
+    let touchTimer = null;
+    function handleTouchStart(e, id) {
+        // 長按 0.5 秒後觸發
+        touchTimer = setTimeout(() => {
+            showTierSelectModal(id);
+        }, 500);
+    }
+    // 如果手放開，就取消計時
+    document.addEventListener('touchend', () => clearTimeout(touchTimer));
+
+    function showTierSelectModal(id) {
+        const tiers = ['S', 'A', 'B', 'C', 'D', 'unranked'];
+        const btns = tiers.map(t => 
+            `<button class="btn-base" onclick="updateTierData('${id}', '${t}');closeSystemModal()" style="margin:2px;width:45%;display:inline-block;background:#eee;">${t==='unranked'?'👇 移回下方':t+' 級'}</button>`
+        ).join('');
+        
+        document.getElementById('sys-title').textContent = "移動到哪個等級？";
+        document.getElementById('sys-msg').innerHTML = ""; 
+        document.getElementById('sys-actions').innerHTML = `<div style="text-align:center;">${btns}</div>`;
+        document.getElementById('system-modal').classList.add('active');
+    }
     </script>
 </body>
 </html>
