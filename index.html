@@ -518,6 +518,13 @@
         /* 深色模式修正 */
         body.dark-mode .tier-pool { background: #2c2c2c; border-color: #555; }
         body.dark-mode #driver-view-tier h2 { color: #fff; }
+        
+        /* === 新增：Tier List 拖曳樣式 === */
+        .tier-avatar.dragging {
+            opacity: 0.5;
+            border: 2px dashed #fff;
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -767,12 +774,10 @@
             <div id="tier-pool" class="tier-pool" ondrop="drop(event, 'unranked')" ondragover="allowDrop(event)"></div>
             <div style="text-align:center; color:#aaa; font-size:12px; margin-top:-40px; margin-bottom: 20px;">長按頭像即可移動</div>
         </div>
-        </section>  <section id="settings">
     </section>
 
-        <!-- Settings -->
-        <section id="settings">
-            <div class="settings-header">
+    <section id="settings">
+        <div class="settings-header">
                 <button class="btn-close" style="width:36px;height:36px;" onclick="exitSettings()">‹</button>
                 <h1 style="margin:0;">個人設定</h1>
             </div>
@@ -4179,12 +4184,12 @@
         document.getElementById('driver-view-list').classList.add('active');
     };
 
-    // 3. 渲染排行榜畫面
+    // 3. 渲染排行榜畫面 (已修正：加入 ID 綁定以支援排序)
     window.renderTierList = function() {
         // 清空畫面
         document.querySelectorAll('.tier-content').forEach(el => el.innerHTML = '');
         const pool = document.getElementById('tier-pool');
-        pool.innerHTML = '';
+        if(pool) pool.innerHTML = '';
 
         // 取得資料
         let data = currentTierMode === 'actor' ? actorProfiles : partnerProfiles;
@@ -4195,6 +4200,7 @@
         data.forEach(item => {
             const tier = item.tier || 'unranked'; // 預設為未分級
             const img = item.avatar || item.photo || DEFAULT_AVATAR;
+            // 根據模式決定 ID (雲端情人用 id, 性夥伴用 name)
             const id = currentTierMode === 'actor' ? item.id : item.name;
 
             const imgEl = document.createElement('img');
@@ -4202,7 +4208,10 @@
             imgEl.className = 'tier-avatar';
             imgEl.draggable = true;
             
-            // 綁定事件 (手機長按 / 電腦拖曳)
+            // 🔥 關鍵修改：將 ID 綁定在 DOM 上，排序時才找得到人
+            imgEl.dataset.tid = id;
+
+            // 綁定事件
             imgEl.ontouchstart = (e) => handleTouchStart(e, id);
             imgEl.ondragstart = (e) => drag(e, id);
             imgEl.onclick = () => showAlert(`這是：${item.name}`);
@@ -4213,18 +4222,135 @@
                 const container = document.querySelectorAll('.tier-content')[map[tier]];
                 if(container) container.appendChild(imgEl);
             } else {
-                pool.appendChild(imgEl);
+                if(pool) pool.appendChild(imgEl);
             }
         });
     };
 
-    // --- 拖曳功能 (電腦版) ---
+    // --- 拖曳功能優化 (支援左右互換與插入) ---
+    
     let draggedId = null;
-    window.allowDrop = function(ev) { ev.preventDefault(); };
-    window.drag = function(ev, id) { draggedId = id; ev.dataTransfer.setData("text", id); };
-    window.drop = function(ev, targetTier) { ev.preventDefault(); updateTierData(draggedId, targetTier); };
 
-    // --- 更新資料邏輯 ---
+    window.allowDrop = function(ev) { 
+        ev.preventDefault(); 
+    };
+
+    window.drag = function(ev, id) { 
+        draggedId = id; 
+        ev.dataTransfer.setData("text", id);
+        // 加入視覺效果
+        setTimeout(() => ev.target.classList.add('dragging'), 0);
+    };
+
+    // 監聽拖曳結束，移除視覺效果
+    document.addEventListener('dragend', (e) => {
+        if(e.target.classList && e.target.classList.contains('tier-avatar')) {
+            e.target.classList.remove('dragging');
+        }
+    });
+
+    // 🔥 計算插入位置的核心函式
+    function getDragAfterElement(container, x) {
+        const draggableElements = [...container.querySelectorAll('.tier-avatar:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const boxCenter = box.left + box.width / 2;
+            const offset = x - boxCenter;
+
+            // 負數代表滑鼠在元素左邊，取最大的負數(最接近 0)
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // 🔥 覆寫 Drop 函式
+    window.drop = function(ev, targetTierStr) { 
+        ev.preventDefault(); 
+        
+        // 1. 找出正確的容器
+        let container = ev.target;
+        // 如果放開時游標在圖片上，要往上找父容器
+        if (!container.classList.contains('tier-content') && !container.classList.contains('tier-pool')) {
+            container = container.closest('.tier-content') || container.closest('.tier-pool');
+        }
+        if (!container) return;
+
+        // 2. 執行視覺插入 (InsertBefore)
+        const afterElement = getDragAfterElement(container, ev.clientX);
+        const draggingImg = document.querySelector('.dragging');
+        
+        if (!draggingImg) return;
+
+        if (afterElement == null) {
+            container.appendChild(draggingImg);
+        } else {
+            container.insertBefore(draggingImg, afterElement);
+        }
+
+        // 3. 重建資料 (Rebuild Data)
+        rebuildAndSaveTierData();
+    };
+
+    // 🔥 根據畫面順序，更新資料庫
+    function rebuildAndSaveTierData() {
+        const rows = document.querySelectorAll('.tier-content, .tier-pool');
+        let newDataList = [];
+        let sourceList = currentTierMode === 'actor' ? actorProfiles : partnerProfiles;
+
+        // 依序掃描 S, A, B, C, D, Pool
+        rows.forEach(row => {
+            // 判斷等級
+            let rank = 'unranked';
+            const label = row.previousElementSibling; 
+            if (label && label.classList.contains('tier-label')) {
+                // 從 label 內的文字 (S, A...) 取得等級，去除空白
+                rank = label.textContent.trim(); 
+            }
+
+            // 取得該列所有圖片 ID
+            const imgs = row.querySelectorAll('.tier-avatar');
+            imgs.forEach(img => {
+                const id = img.dataset.tid;
+                let item = null;
+                // 比對資料
+                if (currentTierMode === 'actor') {
+                    item = sourceList.find(x => x.id == id);
+                } else {
+                    item = sourceList.find(x => x.name === id);
+                }
+
+                if (item) {
+                    item.tier = rank; // 更新等級
+                    newDataList.push(item); // 依照視覺順序加入
+                }
+            });
+        });
+
+        // 防呆：如果有資料沒被顯示出來，補在最後面以免遺失
+        if (newDataList.length < sourceList.length) {
+             sourceList.forEach(oldItem => {
+                 const exists = currentTierMode === 'actor' 
+                    ? newDataList.find(x => x.id == oldItem.id)
+                    : newDataList.find(x => x.name == oldItem.name);
+                 if(!exists) newDataList.push(oldItem);
+             });
+        }
+
+        // 存回全域變數並寫入 LocalStorage
+        if (currentTierMode === 'actor') {
+            actorProfiles = newDataList;
+            saveActorData();
+        } else {
+            partnerProfiles = newDataList;
+            savePartnerData();
+        }
+    }
+
+    // 更新單一資料 (給手機版長按選單使用)
     function updateTierData(id, targetTier) {
         let dataList = currentTierMode === 'actor' ? actorProfiles : partnerProfiles;
         let item = null;
@@ -4237,8 +4363,8 @@
 
         if (item) {
             item.tier = targetTier;
-            renderTierList(); // 重新整理畫面
-            saveTierList(true); // 自動儲存
+            renderTierList(); 
+            saveTierList(true);
         }
     }
 
