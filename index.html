@@ -1104,6 +1104,7 @@ body.dark-mode .calendar-day.level-1 { color: #fff; background-color: rgba(118, 
                 <div class="settings-title">資料管理</div>
                 <p class="settings-desc">所有資料都儲存在您的瀏覽器中。請定期匯出備份，以免資料遺失。</p>
                 <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button class="btn-base btn-outline" style="margin-top:10px;" onclick="checkStorageUsage()">💾 檢查目前容量</button>
                     <button class="btn-base btn-outline" onclick="exportData()">📤 匯出備份 (JSON)</button>
                     <button class="btn-base btn-outline" onclick="document.getElementById('import-file').click()">📥 匯入備份 (JSON)</button>
                     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
@@ -2258,7 +2259,34 @@ body.dark-mode .calendar-day.level-1 { color: #fff; background-color: rgba(118, 
                 });
             });
         };
-
+/* === 檢查 localStorage 容量功能 === */
+window.checkStorageUsage = function() {
+    let total = 0;
+    for (let x in localStorage) {
+        if (localStorage.hasOwnProperty(x)) {
+            // 計算字串長度 * 2 (因為 JS 字串是 UTF-16，每個字佔 2 bytes)
+            total += (localStorage[x].length * 2);
+        }
+    }
+    
+    // 換算單位
+    let kb = (total / 1024).toFixed(2);
+    let mb = (total / 1024 / 1024).toFixed(2);
+    
+    // 5MB = 5120 KB
+    let percent = ((total / (5 * 1024 * 1024)) * 100).toFixed(1);
+    
+    let msg = `目前使用量：${kb} KB (${mb} MB)\n`;
+    msg += `約佔 5MB 上限的：${percent}%\n\n`;
+    
+    if (total > 4 * 1024 * 1024) {
+        msg += "⚠️ 容量快滿了，建議備份後清空部分資料！";
+    } else {
+        msg += "✅ 容量非常充足！";
+    }
+    
+    showAlert(msg);
+};
         // --- Achievements Logic (V5：新年特赦 + 自動回收機制) ---
         function checkAchievements(onFinished) {
             const sorted = [...ejaculationRecords].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
