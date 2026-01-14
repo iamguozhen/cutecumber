@@ -511,7 +511,10 @@
         .tier-avatar { 
             width: 55px; height: 55px; border-radius: 8px; object-fit: cover; cursor: grab; 
             border: 2px solid transparent; transition: transform 0.1s; 
-            -webkit-user-select: none; user-select: none; touch-action: none;
+            -webkit-user-select: none; user-select: none; 
+            
+            /* 🔥 新增這一行：禁止瀏覽器預設的捲動行為，讓 JS 接管拖曳 */
+            touch-action: none; 
         }
         .tier-avatar:active { cursor: grabbing; transform: scale(1.1); border-color: white; z-index: 100; }
         
@@ -4186,37 +4189,36 @@
 
     // 3. 渲染排行榜畫面 (已修正：加入 ID 綁定以支援排序)
     window.renderTierList = function() {
-        // 清空畫面
         document.querySelectorAll('.tier-content').forEach(el => el.innerHTML = '');
         const pool = document.getElementById('tier-pool');
         if(pool) pool.innerHTML = '';
 
-        // 取得資料
         let data = currentTierMode === 'actor' ? actorProfiles : partnerProfiles;
-        
-        // 確保夥伴資料有同步
         if(currentTierMode === 'partner' && window.syncPartnersFromRecords) window.syncPartnersFromRecords();
 
         data.forEach(item => {
-            const tier = item.tier || 'unranked'; // 預設為未分級
+            const tier = item.tier || 'unranked';
             const img = item.avatar || item.photo || DEFAULT_AVATAR;
-            // 根據模式決定 ID (雲端情人用 id, 性夥伴用 name)
             const id = currentTierMode === 'actor' ? item.id : item.name;
 
             const imgEl = document.createElement('img');
             imgEl.src = img;
             imgEl.className = 'tier-avatar';
-            imgEl.draggable = true;
-            
-            // 🔥 關鍵修改：將 ID 綁定在 DOM 上，排序時才找得到人
+            imgEl.draggable = true; // 電腦版拖曳需要
             imgEl.dataset.tid = id;
 
-            // 綁定事件
-            imgEl.ontouchstart = (e) => handleTouchStart(e, id);
+            // --- 電腦版事件 ---
             imgEl.ondragstart = (e) => drag(e, id);
+            
+            // --- 🔥 手機版觸控事件 (新增這三行) ---
+            // 移除原本的 ontouchstart，改用 addEventListener 以便傳入參數
+            imgEl.addEventListener('touchstart', (e) => handleMobileTouchStart(e, imgEl), {passive: false});
+            imgEl.addEventListener('touchmove', (e) => handleMobileTouchMove(e), {passive: false});
+            imgEl.addEventListener('touchend', (e) => handleMobileTouchEnd(e), {passive: false});
+
+            // 點擊查看資訊 (單點)
             imgEl.onclick = () => showAlert(`這是：${item.name}`);
 
-            // 放入對應的格子
             if (['S','A','B','C','D'].includes(tier)) {
                 const map = {'S':0, 'A':1, 'B':2, 'C':3, 'D':4};
                 const container = document.querySelectorAll('.tier-content')[map[tier]];
@@ -4367,7 +4369,80 @@
             saveTierList(true);
         }
     }
+    // === 🔥 手機版觸控拖曳邏輯 (Mobile Touch Drag Logic) ===
 
+    let mobileDragItem = null; // 正在被拖曳的物件
+    let mobileTouchTimer = null; // 長按計時器
+    let isMobileDragging = false; // 是否進入拖曳模式
+
+    function handleMobileTouchStart(e, el) {
+        // 1. 初始化狀態
+        isMobileDragging = false;
+        mobileDragItem = el;
+        
+        // 2. 設定長按偵測 (長按 200ms 後開始拖曳，避免誤觸捲動)
+        mobileTouchTimer = setTimeout(() => {
+            isMobileDragging = true;
+            if(navigator.vibrate) navigator.vibrate(50); // 震動回饋
+            el.classList.add('dragging'); // 加入視覺效果
+        }, 200);
+    }
+
+    function handleMobileTouchMove(e) {
+        // 如果還沒進入拖曳模式 (手指剛放上去還沒長按)，就允許畫面捲動
+        if (!isMobileDragging) {
+            // 如果手指移動了，代表使用者想捲動頁面，取消長按計時
+            clearTimeout(mobileTouchTimer);
+            return; 
+        }
+
+        // --- 進入拖曳模式 ---
+        e.preventDefault(); // 🔥 關鍵：禁止畫面捲動，讓手指專心拖曳圖片
+
+        const touch = e.touches[0]; // 取得第一根手指的位置
+        
+        // 1. 找出手指目前指到的位置下面是什麼容器
+        // 我們先暫時把正在拖曳的圖片隱藏一下，不然 elementFromPoint 會一直抓到圖片自己
+        mobileDragItem.style.display = 'none'; 
+        let elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        mobileDragItem.style.display = 'block'; // 馬上顯示回來
+
+        if (!elementBelow) return;
+
+        // 2. 判斷手指是否在「等級列 (tier-content)」或「待分類區 (tier-pool)」上方
+        let container = elementBelow.closest('.tier-content') || elementBelow.closest('.tier-pool');
+        
+        if (container) {
+            // 3. 使用我們之前寫好的 getDragAfterElement 算法來計算插入點
+            const afterElement = getDragAfterElement(container, touch.clientX);
+            
+            if (afterElement == null) {
+                container.appendChild(mobileDragItem); // 插在最後
+            } else {
+                // 只有當位置真的不同時才插入，減少閃爍
+                if (afterElement !== mobileDragItem.nextSibling) {
+                    container.insertBefore(mobileDragItem, afterElement);
+                }
+            }
+        }
+    }
+
+    function handleMobileTouchEnd(e) {
+        // 清除計時器
+        clearTimeout(mobileTouchTimer);
+
+        // 如果剛剛是在拖曳狀態
+        if (isMobileDragging && mobileDragItem) {
+            mobileDragItem.classList.remove('dragging');
+            
+            // 🔥 拖曳結束，馬上存檔
+            rebuildAndSaveTierData();
+        }
+
+        // 重置變數
+        mobileDragItem = null;
+        isMobileDragging = false;
+    }
     // --- 儲存功能 ---
     window.saveTierList = function(silent = false) {
         if (currentTierMode === 'actor') saveActorData();
