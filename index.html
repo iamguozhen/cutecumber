@@ -369,8 +369,48 @@
 /* 移除原本的點點樣式 (如果還在的話可以刪除，或用這行隱藏) */
 .calendar-drops { display: none !important; }
 
-/* Dark Mode 微調 (確保深色模式下文字依然清晰) */
-body.dark-mode .calendar-day.level-1 { color: #fff; background-color: rgba(118, 200, 70, 0.35); }
+/* === 🌙 深色模式專用補丁 (請貼在原本的 CSS 下方) === */
+
+/* 1. 基礎格子：加上深灰邊框，讓格子在黑底中粒粒分明 */
+body.dark-mode .calendar-day {
+    border: 1px solid #333; 
+    color: #eee;
+}
+
+/* 2. 自慰等級 (綠色系) - 改用螢光綠，增加通透感 */
+body.dark-mode .calendar-day.level-1 {
+    background-color: rgba(118, 200, 70, 0.3); /* 降低透明度，隱約發光 */
+    color: #fff;
+}
+body.dark-mode .calendar-day.level-2 {
+    background-color: rgba(118, 200, 70, 0.6); /* 加亮 */
+    color: #fff !important;
+    text-shadow: 0 0 5px rgba(0,0,0,0.8);      /* 加強陰影讓字更清楚 */
+}
+body.dark-mode .calendar-day.level-3 {
+    background-color: #5cad2c;                 /* 實心深綠 */
+    box-shadow: 0 0 8px rgba(118, 200, 70, 0.6); /* 增加霓虹光暈 */
+}
+
+/* 3. 做愛 (粉紅色) - 稍微調深，並增加粉紅光暈 */
+body.dark-mode .calendar-day.type-sex {
+    background-color: #D1478D; 
+    box-shadow: 0 0 8px rgba(255, 105, 180, 0.5);
+}
+
+/* 4. 夢遺 (淺藍色) - 🔥 這是最需要修的 */
+/* 原本的淺藍太亮，配白字會看不到。改成「深天空藍」，對比才夠 */
+body.dark-mode .calendar-day.type-wet {
+    background-color: #4A90E2; 
+    color: #fff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* 5. 確保「今天」的黃色圈圈在深色模式下夠明顯 */
+body.dark-mode .calendar-day.today {
+    border: 2px solid #FFD700;
+    background-color: rgba(255, 215, 0, 0.15);
+}
         /* === 日記列表樣式優化版 (請直接取代舊的) === */
 
 .diary-card { 
