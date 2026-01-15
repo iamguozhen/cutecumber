@@ -823,6 +823,57 @@ body.dark-mode .calendar-day.today {
             border: 2px dashed #fff;
             transform: scale(1.1);
         }
+
+        /* === 📷 相簿功能專用樣式 (Instagram 風格) === */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 強制分為 3 直欄 */
+            gap: 3px; /* 照片之間的間距，模彷 IG 的窄間距 */
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .photo-grid-item {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1; /* 🔥 關鍵：強制正方形比例 */
+            background-color: #f0f0f0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .photo-grid-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 🔥 關鍵：填滿正方形但不變形 (會裁切) */
+            transition: transform 0.2s;
+            display: block;
+        }
+
+        /* 按壓時的縮放效果 */
+        .photo-grid-item:active .photo-grid-img {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        /* === 🔍 大圖瀏覽器樣式 === */
+        .photo-viewer-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .photo-viewer-img {
+            max-width: 100%;
+            max-height: 75vh; /* 限制高度，留空間給按鈕 */
+            object-fit: contain; /* 保持原圖比例完整顯示 */
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
