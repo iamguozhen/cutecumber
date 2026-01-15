@@ -4554,14 +4554,24 @@ window.checkStorageUsage = function() {
         document.getElementById('driver-view-list').classList.add('active');
     };
 
-    // 3. 渲染排行榜畫面 (已修正：加入 ID 綁定以支援排序)
+    // 3. 渲染排行榜畫面 (修正版：依照 tierOrder 強制排序)
     window.renderTierList = function() {
         document.querySelectorAll('.tier-content').forEach(el => el.innerHTML = '');
         const pool = document.getElementById('tier-pool');
         if(pool) pool.innerHTML = '';
 
         let data = currentTierMode === 'actor' ? actorProfiles : partnerProfiles;
+        
+        // 如果是夥伴模式，先同步資料
         if(currentTierMode === 'partner' && window.syncPartnersFromRecords) window.syncPartnersFromRecords();
+
+        // 🔥 關鍵修正：渲染前，先依照 tierOrder 排好隊！
+        // 這樣就算列表模式把資料洗亂了，這裡也會把它排回來
+        data.sort((a, b) => {
+            const orderA = (a.tierOrder !== undefined) ? a.tierOrder : 99999;
+            const orderB = (b.tierOrder !== undefined) ? b.tierOrder : 99999;
+            return orderA - orderB;
+        });
 
         data.forEach(item => {
             const tier = item.tier || 'unranked';
@@ -4571,20 +4581,25 @@ window.checkStorageUsage = function() {
             const imgEl = document.createElement('img');
             imgEl.src = img;
             imgEl.className = 'tier-avatar';
-            imgEl.draggable = true; // 電腦版拖曳需要
+            imgEl.draggable = true; 
             imgEl.dataset.tid = id;
 
             // --- 電腦版事件 ---
             imgEl.ondragstart = (e) => drag(e, id);
             
-            // --- 🔥 手機版觸控事件 (新增這三行) ---
-            // 移除原本的 ontouchstart，改用 addEventListener 以便傳入參數
+            // --- 手機版觸控事件 ---
             imgEl.addEventListener('touchstart', (e) => handleMobileTouchStart(e, imgEl), {passive: false});
             imgEl.addEventListener('touchmove', (e) => handleMobileTouchMove(e), {passive: false});
             imgEl.addEventListener('touchend', (e) => handleMobileTouchEnd(e), {passive: false});
 
             // 點擊查看資訊 (單點)
             imgEl.onclick = () => showAlert(`這是：${item.name}`);
+            
+            // 長按選單 (手機版輔助)
+            imgEl.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showTierSelectModal(id);
+            });
 
             if (['S','A','B','C','D'].includes(tier)) {
                 const map = {'S':0, 'A':1, 'B':2, 'C':3, 'D':4};
@@ -4664,7 +4679,7 @@ window.checkStorageUsage = function() {
         rebuildAndSaveTierData();
     };
 
-    // 🔥 根據畫面順序，更新資料庫
+    // 🔥 根據畫面順序，更新資料庫 (修正版：加入順序編號)
     function rebuildAndSaveTierData() {
         const rows = document.querySelectorAll('.tier-content, .tier-pool');
         let newDataList = [];
@@ -4676,7 +4691,6 @@ window.checkStorageUsage = function() {
             let rank = 'unranked';
             const label = row.previousElementSibling; 
             if (label && label.classList.contains('tier-label')) {
-                // 從 label 內的文字 (S, A...) 取得等級，去除空白
                 rank = label.textContent.trim(); 
             }
 
@@ -4694,18 +4708,26 @@ window.checkStorageUsage = function() {
 
                 if (item) {
                     item.tier = rank; // 更新等級
+                    
+                    // 🔥 關鍵修正：給它一個順序編號，記住它在隊伍裡的第幾個
+                    item.tierOrder = newDataList.length; 
+                    
                     newDataList.push(item); // 依照視覺順序加入
                 }
             });
         });
 
-        // 防呆：如果有資料沒被顯示出來，補在最後面以免遺失
+        // 防呆：如果有資料沒被顯示出來，補在最後面
         if (newDataList.length < sourceList.length) {
              sourceList.forEach(oldItem => {
                  const exists = currentTierMode === 'actor' 
                     ? newDataList.find(x => x.id == oldItem.id)
                     : newDataList.find(x => x.name == oldItem.name);
-                 if(!exists) newDataList.push(oldItem);
+                 if(!exists) {
+                     // 沒被排到的，編號設大一點，排在最後
+                     oldItem.tierOrder = 99999;
+                     newDataList.push(oldItem);
+                 }
              });
         }
 
