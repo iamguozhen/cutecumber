@@ -1069,6 +1069,11 @@ body.dark-mode .calendar-day.today {
                     📼 收藏影片
                 </div>
                 <div id="video-list-container" class="video-list-container"></div>
+                <div class="section-header" style="margin-top:30px; font-size:15px; border-left-color:var(--color-primary);">
+                    📷 寫真相簿
+                </div>
+                <div id="photo-list-container" class="photo-grid"></div>
+                <div style="height:50px;"></div> 
             </div>
             <div id="driver-view-detail" class="view-container">
             </div>
@@ -1247,7 +1252,42 @@ body.dark-mode .calendar-day.today {
     <div id="actor-form-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><h3 id="actor-form-title" style="margin:0 0 20px 0;font-size:20px;">建立新檔案</h3><form id="actor-form"><div class="form-group"><label class="form-label">姓名</label><input type="text" id="actor-name" class="form-control" required></div><div class="form-group"><label class="form-label">頭像 (貼網址 或 上傳)</label><input type="url" id="actor-avatar-url" class="form-control" placeholder="https://..."><label for="actor-file-input" class="photo-upload-label">📁 上傳本地圖片</label><input type="file" id="actor-file-input" accept="image/*" style="display:none"><img id="actor-preview" class="photo-preview"></div><div class="form-group"><label class="form-label">個人網站 / X (Twitter)</label><input type="url" id="actor-website" class="form-control" placeholder="https://twitter.com/..."></div><div class="form-group" style="position:relative;"><label class="form-label">標籤 (Hashtag)</label><input type="text" id="actor-tags" class="form-control" placeholder="#巨屌 #Daddy (用空白分隔)" autocomplete="off"><div id="tag-suggestions" class="suggestions-dropdown"></div></div><div class="form-group"><label class="form-label">簡介</label><textarea id="actor-bio" class="form-control" rows="5" placeholder="簡介 (選填)"></textarea></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="closeActorFormModal()">取消</button><button type="submit" id="actor-form-submit" class="btn-base btn-primary" style="flex:1">儲存</button></div></form></div></div>
     <div id="video-form-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><h3 id="video-form-title" style="margin:0 0 20px 0;font-size:20px;">影片資訊</h3><form id="video-form"><div class="form-group"><label class="form-label">標題</label><input type="text" id="video-title" class="form-control" required></div><div class="form-group"><label class="form-label">連結</label><input type="url" id="video-url" class="form-control" placeholder="https://..." required></div><div class="form-group"><label class="form-label">封面 (貼網址 或 上傳)</label><input type="url" id="video-thumb-url" class="form-control" placeholder="https://..."><label for="video-file-input" class="photo-upload-label">📁 上傳封面圖</label><input type="file" id="video-file-input" accept="image/*" style="display:none"><img id="video-preview" class="photo-preview"></div><!-- Video Tags --><div class="form-group" style="position:relative;"><label class="form-label">標籤 (Hashtag)</label><input type="text" id="video-tags" class="form-control" placeholder="#cum #bukkake (用空白分隔)" autocomplete="off"><div id="video-tag-suggestions" class="suggestions-dropdown"></div></div><div class="form-group"><label class="form-label">備註</label><textarea id="video-note" class="form-control"></textarea></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="closeVideoFormModal()">取消</button><button type="submit" id="video-form-submit" class="btn-base btn-primary" style="flex:1">儲存</button></div></form></div></div>
     <div id="video-detail-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button class="btn-close" onclick="closeVideoDetail()">×</button></div><div id="vid-detail-cover-box" class="vid-detail-cover-box" style="display:none"><img id="vid-detail-cover" class="vid-detail-cover"></div><div id="vid-detail-title" class="vid-detail-title"></div><div id="vid-detail-note" class="vid-detail-note" style="display:none"></div><div class="vid-actions"><button id="vid-btn-edit" class="btn-base" style="background:#eee;color:#333;">✏️ 編輯</button><button id="vid-btn-delete" class="btn-base btn-danger">🗑️ 刪除</button><button id="vid-btn-watch" class="btn-base btn-accent vid-main-action">🚀 前往觀看</button></div></div></div>
-<div id="partner-detail-modal" class="modal-overlay bottom-sheet">
+    <div id="photo-form-modal" class="modal-overlay bottom-sheet">
+        <div class="modal-content-bottom">
+            <h3 style="margin:0 0 20px 0;font-size:20px;">新增照片</h3>
+            <form id="photo-form">
+                <div class="form-group">
+                    <label class="form-label">照片來源</label>
+                    <label for="album-file-input" class="photo-upload-label">📁 上傳圖片</label>
+                    <input type="file" id="album-file-input" accept="image/*" style="display:none">
+                    <input type="url" id="album-url-input" class="form-control" placeholder="或貼上圖片網址 (https://...)" style="margin-top:10px;">
+                    <img id="album-preview" class="photo-preview">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">說明 (選填)</label>
+                    <input type="text" id="album-caption" class="form-control" placeholder="備註...">
+                </div>
+                <div style="display:flex;gap:10px;margin-top:20px;">
+                    <button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="document.getElementById('photo-form-modal').classList.remove('active')">取消</button>
+                    <button type="submit" class="btn-base btn-primary" style="flex:1">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="photo-view-modal" class="modal-overlay">
+        <div class="modal-content-bottom" style="background:rgba(0,0,0,0.9); border-radius:0; height:100%; padding-top:safe-area-inset-top; display:flex; flex-direction:column; justify-content:center;">
+            <div style="position:absolute; top:40px; right:20px; z-index:10;">
+                <button class="btn-close" style="background:rgba(255,255,255,0.2); color:white;" onclick="document.getElementById('photo-view-modal').classList.remove('active')">×</button>
+            </div>
+            <img id="pv-img" class="photo-viewer-img">
+            <div id="pv-caption" style="color:white; text-align:center; margin-top:15px; font-size:16px; font-weight:bold;"></div>
+            <div style="display:flex; gap:15px; margin-top:30px; justify-content:center;">
+                <button id="pv-btn-delete" class="btn-base btn-danger" style="width:auto; padding:10px 30px;">🗑️ 刪除此照片</button>
+            </div>
+        </div>
+    </div>
+    <div id="partner-detail-modal" class="modal-overlay bottom-sheet">
         <div class="modal-content-bottom">
             <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
                 <button class="btn-close" onclick="closePartnerDetail()">×</button>
@@ -3813,29 +3853,36 @@ window.checkStorageUsage = function() {
             const vc = document.getElementById('video-list-container');
             vc.innerHTML = '';
             
-            // 插入「新增影片」按鈕 (放在列表最上面)
-            const addBtnDiv = document.createElement('div');
-            addBtnDiv.style.marginBottom = '15px';
-            addBtnDiv.style.textAlign = 'right';
-            addBtnDiv.innerHTML = `<button class="btn-base btn-primary" onclick="openVideoFormModal()" style="font-size:13px; padding:6px 12px; display:inline-flex; align-items:center;">+ 新增影片</button>`;
-            vc.appendChild(addBtnDiv);
+            // --- 修改開始：雙按鈕與相簿邏輯 ---
+            // 1. 插入功能按鈕列 (新增影片 + 新增照片)
+            const actionsDiv = document.createElement('div');
+            actionsDiv.style.marginBottom = '15px';
+            actionsDiv.style.display = 'flex';
+            actionsDiv.style.justifyContent = 'flex-end';
+            actionsDiv.style.gap = '10px';
+            actionsDiv.innerHTML = `
+                <button class="btn-base btn-primary" onclick="openPhotoFormModal()" style="font-size:13px; padding:6px 12px; background:#2196F3;">📷 新增照片</button>
+                <button class="btn-base btn-primary" onclick="openVideoFormModal()" style="font-size:13px; padding:6px 12px;">🎥 新增影片</button>
+            `;
+            vc.appendChild(actionsDiv);
 
+            // 2. 渲染影片列表 (保持原樣)
             if (!a.videos || a.videos.length === 0) {
                 const emptyMsg = document.createElement('div');
                 emptyMsg.style.textAlign = 'center';
                 emptyMsg.style.color = '#ccc';
                 emptyMsg.style.padding = '10px';
-                emptyMsg.textContent = '尚無影片，快去新增一部吧！';
+                emptyMsg.textContent = '尚無影片';
                 vc.appendChild(emptyMsg);
             } else {
                 a.videos.forEach(v => {
+                    // (這段原有的影片渲染程式碼保持不變，為節省篇幅省略，請保留你原本的...)
                     let vTagsHtml = '';
                     if (v.tags && v.tags.length > 0) {
                         vTagsHtml = '<div style="margin-top:4px;">' + 
                             v.tags.map(t => `<span class="video-tag" onclick="event.stopPropagation(); searchByTag('${t}')">${t}</span>`).join('') + 
                             '</div>';
                     }
-
                     const c = document.createElement('div');
                     c.className = 'video-card';
                     c.onclick = () => openVideoDetail(a.id, v.id);
@@ -3846,6 +3893,24 @@ window.checkStorageUsage = function() {
                     vc.appendChild(c);
                 });
             }
+
+            // 3. 渲染相簿列表 (新增部分)
+            const pc = document.getElementById('photo-list-container');
+            pc.innerHTML = ''; // 清空舊內容
+            
+            if (a.photos && a.photos.length > 0) {
+                // 反序排列，新照片在前面
+                [...a.photos].reverse().forEach(photo => {
+                    const item = document.createElement('div');
+                    item.className = 'photo-grid-item';
+                    item.onclick = () => openPhotoViewer(photo.id);
+                    item.innerHTML = `<img src="${photo.url}" class="photo-grid-img" loading="lazy">`;
+                    pc.appendChild(item);
+                });
+            } else {
+                pc.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ccc; padding:20px; font-size:13px;">尚無照片</div>';
+            }
+            // --- 修改結束 ---
         };
 
         window.deleteCurrentActor = function() {
@@ -5031,6 +5096,105 @@ window.checkStorageUsage = function() {
             _originalUpdateHome(); // 執行原本的邏輯
             updateMascots();       // 執行吉祥物邏輯
         };
+        
+        /* === 相簿功能邏輯 (New) === */
+        let tempAlbumPhoto = ""; // 暫存上傳的照片
+
+        // 1. 開啟新增照片視窗
+        window.openPhotoFormModal = function() {
+            document.getElementById('photo-form').reset();
+            tempAlbumPhoto = "";
+            document.getElementById('album-preview').src = "";
+            document.getElementById('album-preview').classList.remove('show');
+            document.getElementById('album-url-input').value = "";
+            document.getElementById('photo-form-modal').classList.add('active');
+        };
+
+        // 2. 監聽照片上傳 (包含檔案與網址)
+        document.addEventListener('DOMContentLoaded', () => {
+            // 檔案上傳
+            const fileInput = document.getElementById('album-file-input');
+            if(fileInput) {
+                fileInput.addEventListener('change', async (e) => {
+                    if(e.target.files[0]) {
+                        try {
+                            const b64 = await compressImage(e.target.files[0]);
+                            tempAlbumPhoto = b64;
+                            const p = document.getElementById('album-preview');
+                            p.src = b64;
+                            p.classList.add('show');
+                            document.getElementById('album-url-input').value = ""; // 清空網址欄
+                        } catch(err) { showAlert("圖片處理失敗"); }
+                    }
+                });
+            }
+            // 網址輸入
+            const urlInput = document.getElementById('album-url-input');
+            if(urlInput) {
+                urlInput.addEventListener('input', (e) => {
+                    const val = e.target.value.trim();
+                    if(val) {
+                        tempAlbumPhoto = val;
+                        const p = document.getElementById('album-preview');
+                        p.src = val;
+                        p.classList.add('show');
+                    }
+                });
+            }
+
+            // 表單送出
+            const form = document.getElementById('photo-form');
+            if(form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if(!tempAlbumPhoto) { showAlert('請選擇照片或輸入網址'); return; }
+                    
+                    const caption = document.getElementById('album-caption').value;
+                    const actor = actorProfiles.find(a => a.id === currentActorId);
+                    
+                    if(actor) {
+                        if(!actor.photos) actor.photos = [];
+                        actor.photos.push({
+                            id: Date.now(),
+                            url: tempAlbumPhoto,
+                            caption: caption,
+                            date: new Date().toISOString()
+                        });
+                        actor.lastUpdated = Date.now();
+                        saveActorData();
+                        renderActorDetail(); // 重新渲染頁面
+                        document.getElementById('photo-form-modal').classList.remove('active');
+                        showAlert('照片已新增 📷');
+                    }
+                });
+            }
+        });
+
+        // 3. 查看大圖
+        let currentViewingPhotoId = null;
+        window.openPhotoViewer = function(pid) {
+            const actor = actorProfiles.find(a => a.id === currentActorId);
+            if(!actor || !actor.photos) return;
+            const p = actor.photos.find(x => x.id === pid);
+            if(!p) return;
+
+            currentViewingPhotoId = pid;
+            document.getElementById('pv-img').src = p.url;
+            document.getElementById('pv-caption').textContent = p.caption || "";
+            
+            // 綁定刪除按鈕
+            document.getElementById('pv-btn-delete').onclick = () => {
+                showConfirm('確定要刪除這張照片嗎？', () => {
+                    actor.photos = actor.photos.filter(x => x.id !== pid);
+                    saveActorData();
+                    renderActorDetail();
+                    document.getElementById('photo-view-modal').classList.remove('active');
+                });
+            };
+
+            document.getElementById('photo-view-modal').classList.add('active');
+        };
+    
     </script>
 </body>
 </html>
