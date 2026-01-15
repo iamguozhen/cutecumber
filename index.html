@@ -1116,6 +1116,8 @@ body.dark-mode .calendar-day.today {
                 
                 <div id="detail-profile-container"></div>
 
+                <div id="detail-action-bar" style="margin-top:15px; display:flex; justify-content:flex-end; gap:10px;"></div>
+
                 <div class="section-header" style="margin-top:20px; font-size:15px; border-left-color:var(--color-accent);">
                     📼 收藏影片
                 </div>
@@ -3897,25 +3899,19 @@ window.checkStorageUsage = function() {
             
             p.innerHTML = `<div class="btn-edit-profile" onclick="openEditActorForm()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div><img src="${s}" class="detail-avatar" onerror="this.src='${DEFAULT_AVATAR}'"><div class="detail-name">${a.name}</div><div class="detail-bio">${a.bio || '尚無簡介'}</div>${tagsHtml}${linkHtml}`;
             
-            // --- 修正：在這裡補上「新增影片」按鈕 ---
-            // 為了美觀，我們用 JS 插入按鈕到標題旁邊，或是直接在列表上方加一個按鈕
-            // 這裡採用在列表容器前清空並重建的方式
-            
+            // --- 修改：渲染按鈕到專屬區塊 (Moved Up) ---
+            const actionContainer = document.getElementById('detail-action-bar');
+            if (actionContainer) {
+                actionContainer.innerHTML = `
+                    <button class="btn-base btn-primary" onclick="openPhotoFormModal()" style="font-size:13px; padding:8px 14px; background:#2196F3; box-shadow:0 4px 10px rgba(33, 150, 243, 0.3);">📷 新增照片</button>
+                    <button class="btn-base btn-primary" onclick="openVideoFormModal()" style="font-size:13px; padding:8px 14px;">🎥 新增影片</button>
+                `;
+            }
+
+            // --- 渲染影片列表 ---
             const vc = document.getElementById('video-list-container');
             vc.innerHTML = '';
-            
-            // --- 修改開始：雙按鈕與相簿邏輯 ---
-            // 1. 插入功能按鈕列 (新增影片 + 新增照片)
-            const actionsDiv = document.createElement('div');
-            actionsDiv.style.marginBottom = '15px';
-            actionsDiv.style.display = 'flex';
-            actionsDiv.style.justifyContent = 'flex-end';
-            actionsDiv.style.gap = '10px';
-            actionsDiv.innerHTML = `
-                <button class="btn-base btn-primary" onclick="openPhotoFormModal()" style="font-size:13px; padding:6px 12px; background:#2196F3;">📷 新增照片</button>
-                <button class="btn-base btn-primary" onclick="openVideoFormModal()" style="font-size:13px; padding:6px 12px;">🎥 新增影片</button>
-            `;
-            vc.appendChild(actionsDiv);
+            // (原本這裡會插入 actionsDiv，現在不需要了，直接開始渲染影片)
 
             // 2. 渲染影片列表 (保持原樣)
             if (!a.videos || a.videos.length === 0) {
