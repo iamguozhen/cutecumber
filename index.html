@@ -2676,43 +2676,167 @@ window.checkStorageUsage = function() {
             }
         };
 
-        // --- Home Logic ---
+        // 輔助函式：從陣列中隨機挑選一句
+        function pickRandom(messages) {
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        // --- Home Logic (V2.0: 裁判與教練模式) ---
         function getHomeMessage() {
-            if (ejaculationRecords.length === 0) return "CuteCumber 隨時待命。";
-            const sorted = [...ejaculationRecords].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-            const last = new Date(sorted[0].timestamp);
+            // 0. 新手或是清空資料狀態
+            if (ejaculationRecords.length === 0) {
+                return pickRandom([
+                    "CuteCumber 系統就緒，等待你的第一次發射。",
+                    "這裡還很乾淨，來點什麼填滿它吧？",
+                    "準備好開始紀錄你的健康旅程了嗎？"
+                ]);
+            }
+
+            const sorted = [...ejaculationRecords].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+            const lastRecord = sorted[0];
+            const lastTime = new Date(lastRecord.timestamp);
             const now = new Date();
+            
+            // 時間差計算
+            const diffMs = now - lastTime;
+            const diffHours = diffMs / (1000 * 60 * 60);
+            const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+            // 今日統計
             const todayStr = now.toDateString();
             const todayCount = sorted.filter(r => new Date(r.timestamp).toDateString() === todayStr).length;
 
-            // 1. High Freq
+            // --- 1. 高頻警報 (CD 時間過短) ---
             if (sorted.length >= 2) {
-                const prev = new Date(sorted[1].timestamp);
-                if ((last - prev) < 3600000) return "間隔不到一小時？！你的賢者模式冷卻時間也太短了吧，佩服。";
+                const prevTime = new Date(sorted[1].timestamp);
+                const gapBetweenLastTwo = (lastTime - prevTime) / (1000 * 60 * 60); // 小時
+                
+                // 兩發間隔小於 1 小時
+                if (gapBetweenLastTwo < 1) {
+                    return pickRandom([
+                        "間隔不到一小時？！你的賢者模式冷卻時間也太短了吧。",
+                        "火力展示？兄弟，你的槍管不會過熱嗎？",
+                        "太猛了... 生產隊的驢都沒你這麼勤勞。",
+                        "注意身體啊，這種頻率是想挑戰人體極限嗎？"
+                    ]);
+                }
             }
-            if (todayCount >= 3) return "一天三次？請立刻補充牡蠣、鋅片或香蕉，身體要顧啊！";
-            if (todayCount === 2) return "哇，又一發，今天精神很好喔？";
 
-            // 2. Time based
-            if (last.toDateString() === todayStr) {
-                const h = last.getHours();
-                const day = last.getDay(); // 0 Sun, 6 Sat
-                if (day >= 1 && day <= 5 && h >= 12 && h < 13) return "午休時間也不放過？時間管理大師就是你。";
-                if (h >= 6 && h < 9) return "一日之計在於晨...勃？看來你醒得很徹底。";
-                if (h >= 1 && h < 4) return "凌晨還不睡...是在釋放壓力還是單純失眠？早點休息吧。";
+            // --- 2. 禁慾獎勵 (很久沒做) ---
+            // 超過 7 天
+            if (diffDays > 7) {
+                return pickRandom([
+                    `已經 ${Math.floor(diffDays)} 天沒動靜了，你的意志力堅如磐石！`,
+                    "這就是傳說中的「儲存查克拉」嗎？感覺隨時能發大招。",
+                    "身體正在進行深度淨化，小天使為你感到驕傲。",
+                    "太久沒用會生鏽喔... 開玩笑的，保持這股氣勢！"
+                ]);
             }
-            
-            // 3. Weekend Warrior (Simple check)
+            // 超過 3 天
+            if (diffDays > 3) {
+                return pickRandom([
+                    "三天未發，這份忍耐力值得嘉許。",
+                    "適度禁慾有助於提升專注力，你現在感覺如何？",
+                    "小惡魔正在角落畫圈圈，因為你都不理它。"
+                ]);
+            }
+
+            // --- 3. 模式偵測 (如果是做愛或夢遺) ---
+            // 如果最後一次是「做愛」
+            if (lastRecord.type === '做愛') {
+                return pickRandom([
+                    "人與人的連結達成！身心應該都很滿足吧？",
+                    "恭喜老爺，賀喜老爺。記得多喝水補充體力。",
+                    "實戰經驗 +1，這比自己來有意思多了對吧？",
+                    "看來你有個愉快的時光，CuteCumber 為你點讚。"
+                ]);
+            }
+            // 如果最後一次是「夢遺」
+            if (lastRecord.type === '夢遺') {
+                return pickRandom([
+                    "非自願的釋放... 夢裡發生了什麼好事？",
+                    "雖然有點意外，但這也是身體健康的證明。",
+                    "記得換洗內褲與床單，這是系統唯一能給的建議。"
+                ]);
+            }
+
+            // --- 4. 單日次數 (過量提醒) ---
+            if (todayCount >= 4) {
+                return "一天四次？！請立刻停止操作並去睡覺，這是命令！";
+            }
+            if (todayCount === 3) {
+                return pickRandom([
+                    "一日三省吾身... 你是不是「省」太多次了？",
+                    "請立刻補充牡蠣、鋅片或香蕉，身體要顧啊！",
+                    "今天的額度已經嚴重超支了，且慢！"
+                ]);
+            }
+            if (todayCount === 2) {
+                return pickRandom([
+                    "梅開二度！今天精神很好喔？",
+                    "好事成雙，但差不多該休息囉。",
+                    "第二發了，注意過度摩擦可能會破皮（貼心提醒）。"
+                ]);
+            }
+
+            // --- 5. 特殊時段偵測 ---
+            const h = lastTime.getHours(); // 這是取「最後一次紀錄」的時間，不是現在時間
+            const isTodayRecord = lastTime.toDateString() === todayStr;
+
+            if (isTodayRecord) {
+                // 午休時間 (12-13)
+                if (h >= 12 && h < 14) {
+                    return pickRandom([
+                        "午休時間也不放過？時間管理大師就是你。",
+                        "飽暖思淫慾... 古人誠不欺我。",
+                        "中午來一發，下午上班更有精神（或是更想睡）？"
+                    ]);
+                }
+                // 晨勃 (6-9)
+                if (h >= 6 && h < 9) {
+                    return pickRandom([
+                        "一日之計在於晨...勃？看來你醒得很徹底。",
+                        "早安！用這種方式喚醒身體也是一種選擇。",
+                        "晨間運動有益身心健康，雖然這運動有點特別。"
+                    ]);
+                }
+                // 深夜 (1-4)
+                if (h >= 1 && h < 5) {
+                    return pickRandom([
+                        "凌晨還不睡... 是在釋放壓力還是單純失眠？",
+                        "夜深人靜，正是尻槍時。早點休息吧。",
+                        "這個時間點，全世界都睡了，只有你和你的手醒著。"
+                    ]);
+                }
+            }
+
+            // --- 6. 週末戰士 (週末且有紀錄) ---
             const day = now.getDay();
-            if ((day === 0 || day === 6) && todayCount >= 2) return "平日養生，週末往死裡尻！";
-            
-            // Just for today count > 0 but no special cond
-            if (todayCount > 0) {
-                 const randomMsgs = ["今天也是充滿活力的一天。", "CuteCumber 隨時待命。", "記得多喝水。", "保持心情愉快。"];
-                 return randomMsgs[Math.floor(Math.random() * randomMsgs.length)];
+            if ((day === 0 || day === 6) && todayCount >= 1) {
+                return pickRandom([
+                    "平日養生，週末往死裡尻！",
+                    "週末就是放縱的時候，享受你的假期。",
+                    "Happy Weekend! 快樂的方式有很多種，你選擇了這一種。"
+                ]);
             }
 
-            return "今天還沒動靜呢，蓄力中？";
+            // --- 7. 預設待機訊息 (如果上面都沒觸發) ---
+            if (todayCount > 0) {
+                return pickRandom([
+                    "今天已經打卡過了，保持心情愉快。",
+                    "射後不理？別忘了紀錄一下心情備註。",
+                    "身體感到放鬆了嗎？這才是最重要的。",
+                    "CuteCumber 隨時待命，期待你的下一次數據。"
+                ]);
+            }
+
+            // 完全沒動靜的預設
+            return pickRandom([
+                "今天還沒動靜呢，正在蓄力中？",
+                "暴風雨前的寧靜...",
+                "小惡魔在蠢蠢欲動，小天使在閉目養神。",
+                "準備好隨時記錄你的精彩時刻。"
+            ]);
         }
 
         function updateHomeDisplay() {
