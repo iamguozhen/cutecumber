@@ -1623,7 +1623,39 @@ body.dark-mode .calendar-day.level-1 { color: #fff; background-color: rgba(118, 
         ];
 
         // --- 2. Core Helper Functions (Moved to Global Scope) ---
-        window.compressImage = function(f){return new Promise((res,rej)=>{const r=new FileReader();r.readAsDataURL(f);r.onload=e=>{const i=new Image();i.src=e.target.result;i.onload=()=>{const c=document.createElement('canvas');let w=i.width,h=i.height,m=600;if(w>h){if(w>m){h*=m/w;w=m;}}else{if(h>m){w*=m/h;h=m;}}c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(i,0,0,w,h);res(c.toDataURL('image/jpeg',0.6));};i.onerror=rej;};r.onerror=rej;});}
+        /* === 強力壓縮版 (為了省空間：300px / 0.4畫質) === */
+window.compressImage = function(f) {
+    return new Promise((res, rej) => {
+        const r = new FileReader();
+        r.readAsDataURL(f);
+        r.onload = e => {
+            const i = new Image();
+            i.src = e.target.result;
+            i.onload = () => {
+                const c = document.createElement('canvas');
+                
+                // 📉 改動 1：最大邊長從 600 改為 300 (大幅減少像素)
+                let w = i.width, h = i.height, m = 300; 
+                
+                if (w > h) {
+                    if (w > m) { h *= m / w; w = m; }
+                } else {
+                    if (h > m) { w *= m / h; h = m; }
+                }
+                
+                c.width = w;
+                c.height = h;
+                const x = c.getContext('2d');
+                x.drawImage(i, 0, 0, w, h);
+                
+                // 📉 改動 2：JPG 壓縮率從 0.6 改為 0.4 (犧牲畫質換空間)
+                res(c.toDataURL('image/jpeg', 0.4));
+            };
+            i.onerror = rej;
+        };
+        r.onerror = rej;
+    });
+};
         window.setupImageUpload = function(id,pid,cb){const el=document.getElementById(id);if(el)el.addEventListener('change',async(e)=>{if(e.target.files[0]){try{const b64=await compressImage(e.target.files[0]);const p=document.getElementById(pid);p.src=b64;p.classList.add('show');if(cb)cb(b64);}catch(err){showAlert("圖片失敗");}}});}
         window.getNowInputValue = function(){const n=new Date();n.setMinutes(n.getMinutes()-n.getTimezoneOffset());return n.toISOString().slice(0,16);}
         window.getRelativeTime = function(timestamp) {
