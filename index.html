@@ -1302,7 +1302,18 @@ body.dark-mode .calendar-day.today {
 
     <div id="detail-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><div style="display:flex;justify-content:space-between;margin-bottom:15px;"><span id="detail-date-time" style="font-size:18px;font-weight:800;"></span><button class="btn-close" onclick="closeDetailModal()">×</button></div><div id="detail-photo-container" style="margin-bottom:20px;border-radius:16px;overflow:hidden;display:none;"><img id="detail-photo" style="width:100%;"></div><div style="display:flex;gap:10px;margin-bottom:15px;"><span id="detail-type" style="background:var(--color-primary);color:white;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:bold;"></span><span id="detail-location" style="color:#666;font-size:14px;"></span></div><div id="detail-note-box" style="background:white;padding:15px;border-radius:12px;border:1px solid #eee;color:#555;font-size:15px;line-height:1.6;margin-bottom:25px;white-space:pre-wrap;display:none;"></div><div id="detail-empty-note" style="color:#aaa;font-style:italic;margin-bottom:20px;display:none">無備註</div><div style="display:flex;gap:10px;"><button id="detail-edit-btn" class="btn-base" style="background:#eee;flex:1;color:#333">編輯</button><button id="detail-delete-btn" class="btn-base btn-danger" style="flex:1;">刪除</button></div></div></div>
     <div id="daily-list-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><div style="display:flex;justify-content:space-between;margin-bottom:15px;"><span id="daily-list-date" style="font-size:18px;font-weight:800;"></span><button class="btn-close" onclick="closeDailyListModal()">×</button></div><div style="color:#666;font-size:14px;margin-bottom:15px;">共 <span id="daily-count" style="font-weight:bold;color:var(--color-primary)"></span> 筆紀錄</div><div id="daily-list-container" style="display:flex;flex-direction:column;gap:10px;"></div></div></div>
-    <div id="actor-form-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><h3 id="actor-form-title" style="margin:0 0 20px 0;font-size:20px;">建立新檔案</h3><form id="actor-form"><div class="form-group"><label class="form-label">姓名</label><input type="text" id="actor-name" class="form-control" required></div><div class="form-group"><label class="form-label">頭像 (貼網址 或 上傳)</label><input type="url" id="actor-avatar-url" class="form-control" placeholder="https://..."><label for="actor-file-input" class="photo-upload-label">📁 上傳本地圖片</label><input type="file" id="actor-file-input" accept="image/*" style="display:none"><img id="actor-preview" class="photo-preview"></div><div class="form-group"><label class="form-label">個人網站 / X (Twitter)</label><input type="url" id="actor-website" class="form-control" placeholder="https://twitter.com/..."></div><div class="form-group" style="position:relative;"><label class="form-label">標籤 (Hashtag)</label><input type="text" id="actor-tags" class="form-control" placeholder="#巨屌 #Daddy (用空白分隔)" autocomplete="off"><div id="tag-suggestions" class="suggestions-dropdown"></div></div><div class="form-group"><label class="form-label">簡介</label><textarea id="actor-bio" class="form-control" rows="5" placeholder="簡介 (選填)"></textarea></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="closeActorFormModal()">取消</button><button type="submit" id="actor-form-submit" class="btn-base btn-primary" style="flex:1">儲存</button></div></form></div></div>
+    <div id="actor-form-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><h3 id="actor-form-title" style="margin:0 0 20px 0;font-size:20px;">建立新檔案</h3><form id="actor-form"><div class="form-group"><label class="form-label">姓名</label><input type="text" id="actor-name" class="form-control" required></div>
+        <div class="form-group" style="background: rgba(0,0,0,0.03); padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <div>
+        <label class="form-label" style="margin-bottom: 2px;">檔案類型</label>
+        <div style="font-size: 12px; color: #888;" id="actor-type-desc">👤 真人演員</div>
+    </div>
+    <label class="switch">
+        <input type="checkbox" id="actor-is-collection" onchange="toggleActorTypeLabel()">
+        <span class="slider round"></span>
+    </label>
+</div>
+        <div class="form-group"><label class="form-label">頭像 (貼網址 或 上傳)</label><input type="url" id="actor-avatar-url" class="form-control" placeholder="https://..."><label for="actor-file-input" class="photo-upload-label">📁 上傳本地圖片</label><input type="file" id="actor-file-input" accept="image/*" style="display:none"><img id="actor-preview" class="photo-preview"></div><div class="form-group"><label class="form-label">個人網站 / X (Twitter)</label><input type="url" id="actor-website" class="form-control" placeholder="https://twitter.com/..."></div><div class="form-group" style="position:relative;"><label class="form-label">標籤 (Hashtag)</label><input type="text" id="actor-tags" class="form-control" placeholder="#巨屌 #Daddy (用空白分隔)" autocomplete="off"><div id="tag-suggestions" class="suggestions-dropdown"></div></div><div class="form-group"><label class="form-label">簡介</label><textarea id="actor-bio" class="form-control" rows="5" placeholder="簡介 (選填)"></textarea></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="closeActorFormModal()">取消</button><button type="submit" id="actor-form-submit" class="btn-base btn-primary" style="flex:1">儲存</button></div></form></div></div>
     <div id="video-form-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><h3 id="video-form-title" style="margin:0 0 20px 0;font-size:20px;">影片資訊</h3><form id="video-form"><div class="form-group"><label class="form-label">標題</label><input type="text" id="video-title" class="form-control" required></div><div class="form-group"><label class="form-label">連結</label><input type="url" id="video-url" class="form-control" placeholder="https://..." required></div><div class="form-group"><label class="form-label">封面 (貼網址 或 上傳)</label><input type="url" id="video-thumb-url" class="form-control" placeholder="https://..."><label for="video-file-input" class="photo-upload-label">📁 上傳封面圖</label><input type="file" id="video-file-input" accept="image/*" style="display:none"><img id="video-preview" class="photo-preview"></div><!-- Video Tags --><div class="form-group" style="position:relative;"><label class="form-label">標籤 (Hashtag)</label><input type="text" id="video-tags" class="form-control" placeholder="#cum #bukkake (用空白分隔)" autocomplete="off"><div id="video-tag-suggestions" class="suggestions-dropdown"></div></div><div class="form-group"><label class="form-label">備註</label><textarea id="video-note" class="form-control"></textarea></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="closeVideoFormModal()">取消</button><button type="submit" id="video-form-submit" class="btn-base btn-primary" style="flex:1">儲存</button></div></form></div></div>
     <div id="video-detail-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button class="btn-close" onclick="closeVideoDetail()">×</button></div><div id="vid-detail-cover-box" class="vid-detail-cover-box" style="display:none"><img id="vid-detail-cover" class="vid-detail-cover"></div><div id="vid-detail-title" class="vid-detail-title"></div><div id="vid-detail-note" class="vid-detail-note" style="display:none"></div><div class="vid-actions"><button id="vid-btn-edit" class="btn-base" style="background:#eee;color:#333;">✏️ 編輯</button><button id="vid-btn-delete" class="btn-base btn-danger">🗑️ 刪除</button><button id="vid-btn-watch" class="btn-base btn-accent vid-main-action">🚀 前往觀看</button></div></div></div>
     <div id="photo-form-modal" class="modal-overlay bottom-sheet">
@@ -2257,13 +2268,16 @@ window.compressImage = function(f) {
             // B. 演員排行榜
             const actorsStats = [];
             actorProfiles.forEach(a => {
+                // 🔥 過濾掉合輯 (isCollection 為 true 者不加入排行榜)
+                if (a.isCollection) return; 
+
                 const count = actorCounts[a.id] || 0;
                 if (count > 0) {
-                    actorsStats.push({ 
-                        data: a, type: 'actor', count: count, name: a.name, img: a.avatar || DEFAULT_AVATAR 
-                    });
-                }
-            });
+                actorsStats.push({ 
+                data: a, type: 'actor', count: count, name: a.name, img: a.avatar || DEFAULT_AVATAR 
+             });
+         }
+    });
 
             // C. 影片排行榜
             const videosStats = [];
@@ -3435,6 +3449,8 @@ window.checkStorageUsage = function() {
             tempActorAvatar = "";
             document.getElementById('actor-form-title').textContent = "建立新檔案";
             document.getElementById('actor-form').reset();
+            document.getElementById('actor-is-collection').checked = false; // 預設為真人
+            toggleActorTypeLabel();
             
             // 確保 tags 欄位清空
             document.getElementById('actor-tags').value = "";
@@ -3452,7 +3468,9 @@ window.checkStorageUsage = function() {
             document.getElementById('actor-name').value = a.name;
             document.getElementById('actor-bio').value = a.bio || "";
             document.getElementById('actor-website').value = a.website || "";
-            
+            document.getElementById('actor-is-collection').checked = a.isCollection || false;
+            toggleActorTypeLabel();
+
             // 新增：讀取 tags 轉為字串 (以空白分隔)
             document.getElementById('actor-tags').value = (a.tags || []).join(' ');
 
@@ -3678,6 +3696,23 @@ window.checkStorageUsage = function() {
                 renderPartnerGrid();
             }
         };
+ 
+        // 切換開關時改變文字顯示
+window.toggleActorTypeLabel = function() {
+    const isColl = document.getElementById('actor-is-collection').checked;
+    const label = document.getElementById('actor-type-desc');
+    if (label) {
+        if (isColl) {
+            label.textContent = '📂 影片合輯 / 主題 / 代稱';
+            label.style.color = 'var(--color-primary)';
+            label.style.fontWeight = 'bold';
+        } else {
+            label.textContent = '👤 真人演員';
+            label.style.color = '#888';
+            label.style.fontWeight = 'normal';
+        }
+    }
+};
 
         // 2. 渲染夥伴列表 (V2 智慧排序版)
         window.renderPartnerGrid = function() {
@@ -4552,6 +4587,8 @@ window.checkStorageUsage = function() {
                 const website = document.getElementById('actor-website').value;
 
                 // 新增：處理 tags 字串轉陣列，自動補上 #
+                const isCollection = document.getElementById('actor-is-collection').checked;
+
                 const tagsStr = document.getElementById('actor-tags').value;
                 const tags = tagsStr.split(/[\s,]+/) // 用空白或逗號切分
                     .filter(t => t.trim() !== '')    // 過濾空字串
@@ -4568,15 +4605,26 @@ window.checkStorageUsage = function() {
                         actor.bio = bio; 
                         actor.website = website; // 儲存 website
                         actor.tags = tags; // 儲存 tags
+                        actor.isCollection = isCollection;
                         actor.lastUpdated = Date.now(); // 更新時間
                         saveActorData(); renderActorDetail(); renderActorList(); 
                     } 
                 } else { 
                     // 新增 tags: tags
-                    actorProfiles.unshift({ id: Date.now(), lastUpdated: Date.now(), name, avatar: finalAvatar, bio, website, tags: tags, videos: [] }); 
-                    saveActorData(); renderActorList(); 
-                } 
-                closeActorFormModal(); 
+                    actorProfiles.unshift({ 
+            id: Date.now(), 
+            lastUpdated: Date.now(), 
+            name, 
+            avatar: finalAvatar, 
+            bio, 
+            website, 
+            tags: tags, 
+            videos: [],
+            isCollection: isCollection // 存入
+        }); 
+        saveActorData(); renderActorList(); 
+    } 
+    closeActorFormModal();
             });
 
             document.getElementById('video-form').addEventListener('submit', (e) => { 
