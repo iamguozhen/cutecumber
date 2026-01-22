@@ -891,9 +891,12 @@ body.dark-mode .calendar-day.today {
             border-radius: 4px;
         }
 
-        /* 1. 修正格子：強制固定 3 欄，避免被撐開 */
+        /* --- 1. 列表頁修復 --- */
         .actor-grid {
-            display: grid !important;
+            /* 這裡不可以加 !important，因為要讓 JS 控制顯示/隱藏 */
+            display: grid; 
+        
+            /* 只有這裡要強制，確保一排三個 */
             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             gap: 15px 10px !important;
             width: 100% !important;
@@ -901,8 +904,8 @@ body.dark-mode .calendar-day.today {
             align-items: start;
         }
 
-        /* 2. 修正卡片：限制內容不要亂跑 */
-        .actor-card {
+            /* 修正卡片行為 */
+            .actor-card {
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
@@ -914,7 +917,7 @@ body.dark-mode .calendar-day.today {
         /* 3. 修正頭像：強制正方形圓框，確保不變形 */
         .actor-avatar {
             width: 100% !important;
-            aspect-ratio: 1 / 1 !important; /* 關鍵：強制 1:1 比例 */
+            aspect-ratio: 1 / 1 !important; 
             border-radius: 50% !important;
             object-fit: cover !important;
             background-color: #f0f0f0;
@@ -922,32 +925,103 @@ body.dark-mode .calendar-day.today {
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             margin-bottom: 6px !important;
             display: block !important;
-            height: auto !important; /* 避免被舊設定干擾 */
         }
 
-        /* 4. 修正名字：太長自動變成 ... */
+        /* 修正列表名字 (過長省略) */
         .actor-name {
             font-size: 13px !important;
             font-weight: 600 !important;
             text-align: center !important;
             color: #333;
             width: 100% !important;
-        
-            /* 省略號三兄弟 */
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-        
+            margin-top: 2px;
+            padding: 0 4px;
+       }
+
+        /* 修正列表名字 (過長省略) */
+        .actor-name {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            color: #333;
+            width: 100% !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
             margin-top: 2px;
             padding: 0 4px;
         }
 
-        /* 針對深色模式的微調 */
-        body.dark-mode .actor-name {
-            color: #ddd !important;
+        /* 修正列表名字 (過長省略) */
+        .actor-name {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            color: #333;
+            width: 100% !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            margin-top: 2px;
+            padding: 0 4px;
         }
-        /* === 修正包結束 === */
+
+        /* 詳情頁的大卡片 */
+        .detail-profile {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            width: 100% !important;
+            background: #fff; /* 確保背景是白的 */
+            border-radius: 20px;
+            padding: 30px 20px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* 詳情頁的大頭像 */
+        .detail-avatar {
+            width: 120px !important;  /* 固定大尺寸 */
+            height: 120px !important;
+            border-radius: 50% !important;
+            object-fit: cover !important;
+            border: 4px solid white !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+            margin-bottom: 15px !important;
+            display: block !important;
+            background-color: #eee;
+        }
+
+        /* 詳情頁的大名字 */
+        .detail-name {
+            font-size: 22px !important;
+            font-weight: 800 !important;
+            margin-bottom: 8px !important;
+            color: #333;
+            width: 100%;
+            word-break: break-word; /* 名字太長可以換行 */
+            line-height: 1.2;
+        }
+
+        /* 詳情頁的簡介文字 */
+        .detail-bio {
+            font-size: 14px !important;
+            color: #666;
+            line-height: 1.6 !important;
+            max-width: 90%;
+        }
     
+        /* 深色模式適配 */
+        body.dark-mode .actor-name, 
+        body.dark-mode .detail-name { color: #fff !important; }
+        body.dark-mode .detail-profile { background: #1e1e1e !important; }
+    
+        /* === V2 修正包結束 === */
 
 
     </style>
