@@ -3804,12 +3804,11 @@ window.toggleActorTypeLabel = function() {
                 const flag = p.nation ? p.nation.f : '';
                 
                 d.innerHTML = `
-                    <div style="position:relative; width:100%;">
-                        <img src="${s}" class="actor-avatar" style="border-color:var(--color-accent);" onerror="this.src='${DEFAULT_AVATAR}'">
-                        <div style="position:absolute; bottom:10px; right:0; font-size:24px; text-shadow:0 2px 5px rgba(0,0,0,0.2); filter:drop-shadow(0 0 2px rgba(255,255,255,0.8));">${flag}</div>
+                    <div style="position:relative; display:inline-block;">
+                        <img src="${s}" class="actor-avatar" onerror="this.src='${DEFAULT_AVATAR}'">
+                        ${typeIcon}
                     </div>
-                    <span class="actor-name">${p.name}</span>
-                    <span style="font-size:11px; color:#999;">${count} 次</span>
+                    <span class="actor-name">${a.name}</span>
                 `;
                 c.appendChild(d);
             });
