@@ -1168,7 +1168,7 @@ body.dark-mode .calendar-day.today {
                     
                     <div id="favorites-stats-container" style="margin-top:30px;">
                         <div class="section-header" style="font-size:18px; color:var(--color-accent); border-left-color:var(--color-accent); margin-bottom:20px;">
-                            ☁️ 雲端情人
+                             雲端情人
                         </div>
 
                         <div class="rank-section">
@@ -1181,14 +1181,26 @@ body.dark-mode .calendar-day.today {
                         </div>
                     </div>
                     <div id="partners-stats-container" style="margin-top:30px;">
-                        <div class="section-header" style="font-size:18px; color:#E91E63; border-left-color:#E91E63; margin-bottom:20px;">
-                            👨 最佳戰友
+                        <div class="section-header" style="font-size:18px; color:var(--color-accent); border-left-color:var(--color-accent); margin-bottom:20px;">
+                            Fuck Buddies
                         </div>
 
-                        <div class="rank-section">
-                            <div id="top-partners-list" class="rank-list"></div>
+                        <div class="stats-metrics" style="margin-bottom: 20px;">
+                            <div class="metric-card" style="border-color: rgba(233, 30, 99, 0.2);">
+                               <div class="metric-title">👤 Body Counts</div>
+                               <div class="metric-value" style="color: #E91E63;">
+                                   <span id="stat-partner-count">0</span> <span class="metric-unit">人</span>
+                               </div>
+                            </div>
+                            <div class="metric-card" style="border-color: rgba(233, 30, 99, 0.2);">
+                                 <div class="metric-title">🚩 Country counts</div>
+                                 <div class="metric-value" style="color: #E91E63;">
+                                     <span id="stat-nation-count">0</span> <span class="metric-unit">國</span>
+                                 </div>
+                            </div>
                         </div>
-                    </div>
+    
+                        </div>
                     <div class="rank-section" style="margin-top:20px;">
                             <div class="section-header" style="font-size:14px; border-left:none; padding-left:0; color:#888;">🌍 國民外交 (Diplomacy Map)</div>
                             <div id="map-wrapper" style="position:relative; width:100%; height:350px; border-radius:12px; overflow:hidden; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
@@ -1318,6 +1330,17 @@ body.dark-mode .calendar-day.today {
                 <div class="form-group">
                     <label class="form-label">生日</label>
                     <input type="date" id="setting-birthday" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">我的母國</label>
+                    <div id="user-nation-btn" class="nation-select-btn" onclick="showNationPicker('user');" style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer;">
+                         <span id="user-nation-flag" style="margin-right: 8px;">🏳️</span>
+                         <span id="user-nation-name">選擇國家</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">過往伴侶數 (App 使用前)</label>
+                    <input type="number" id="setting-past-partners" class="form-control" placeholder="請輸入數字" min="0">
                 </div>
                 <button class="btn-base btn-primary" style="width:100%" onclick="saveUserProfile()">💾 儲存個人資料</button>
             </div>
@@ -1560,6 +1583,24 @@ body.dark-mode .calendar-day.today {
         </div>
     </div>
     <!-- Lock Screen -->
+    <div id="nation-picker-modal" class="modal-overlay">
+        <div class="modal-content-bottom" style="height: 80vh;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">選擇國家</h3>
+                <button class="btn-close" onclick="closeNationPicker()">×</button>
+            </div>
+        
+            <div class="search-container">
+                <input type="text" id="nation-search-input" class="search-input" 
+                       placeholder="搜尋國家名稱或代碼..." 
+                       oninput="renderNationList(this.value)">
+            </div>
+
+            <div id="nation-list-container" style="flex:1; overflow-y:auto; margin-top:10px;">
+                </div>
+        </div>
+    </div>
+
     <div id="lock-screen">
         <div class="lock-title" id="lock-title">輸入密碼</div>
         <div class="lock-dots" id="lock-dots">
@@ -2041,11 +2082,19 @@ window.compressImage = function(f) {
         window.saveUserProfile = function() {
             userProfile.nickname = document.getElementById('setting-nickname').value;
             userProfile.birthday = document.getElementById('setting-birthday').value;
+           userProfile.pastPartnerCount = parseInt(document.getElementById('setting-past-partners').value) || 0;
+    
+            // 確保從 UI 上的國旗和名字抓取最新的國家資訊
+            userProfile.nation = {
+                f: document.getElementById('user-nation-flag').textContent,
+                n: document.getElementById('user-nation-name').textContent
+            };
+    
             localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile));
             updateProfileUI();
-            checkAchievements();
-            showAlert('個人資料已更新');
-        }
+            if(window.calculateFavorites) window.calculateFavorites(); // 存檔後立即重新計算人數
+            showAlert('個人資料已更新 ✨');
+        };
 
         window.updateLocationSuggestions = function() {
             const listObj = document.getElementById('location-list');
@@ -2078,6 +2127,12 @@ window.compressImage = function(f) {
             document.getElementById('welcome-text').textContent = greeting;
             document.getElementById('setting-nickname').value = userProfile.nickname || '';
             document.getElementById('setting-birthday').value = userProfile.birthday || '';
+            // --- 新增：載入母國與伴侶數 ---
+            document.getElementById('setting-past-partners').value = userProfile.pastPartnerCount || 0;
+            if (userProfile.nation) {
+                document.getElementById('user-nation-flag').textContent = userProfile.nation.f || '🏳️';
+                document.getElementById('user-nation-name').textContent = userProfile.nation.n || '選擇國家';
+            }
         }
 
         window.toggleDarkMode = function() {
@@ -2268,52 +2323,57 @@ window.compressImage = function(f) {
             }
         };
         window.renderDiplomacyMap = function() {
-            // 1. 基本檢查
             if (!isGoogleChartsLoaded || !window.partnerProfiles) return;
-            
-            // 2. 檢查容器是否可見 (關鍵修復：如果在隱藏狀態下繪製會變空白)
             const mapContainer = document.getElementById('diplomacy-map');
             if (!mapContainer || mapContainer.offsetParent === null) return;
 
-            // 3. 統計各國人數 (轉換為 ISO 代碼)
+            // 1. 統計各國人數，並轉換為 ISO 代碼 (地圖才認得)
             const nationCounts = {};
-            let hasData = false;
+    
+            // 輔助函式：將中文名轉為代碼
+            const getCode = (name) => {
+                const match = COUNTRY_LIST.find(c => c.n === name);
+                return match ? match.c : name;
+            };
 
             partnerProfiles.forEach(p => {
                 if (p.nation && p.nation.n) {
-                    const name = p.nation.n;
-                    const match = COUNTRY_LIST.find(country => country.n === name);
-                    let code = match ? match.c : name;
-                    if (name === '台灣') code = 'TW'; 
-                    
+                    const code = getCode(p.nation.n);
                     nationCounts[code] = (nationCounts[code] || 0) + 1;
-                    hasData = true;
                 }
             });
 
-            // 4. 準備數據
-            const dataArray = [['Country', 'Partners']];
-            Object.keys(nationCounts).forEach(code => {
-                dataArray.push([code, nationCounts[code]]);
-            });
+            const dataArray = [['Country', 'Value', {role: 'tooltip'}]];
 
-            // 如果完全沒資料，就不要畫，或者畫空地圖
-            // Google Charts 至少需要 Header row
-            
-            const data = google.visualization.arrayToDataTable(dataArray);
+           // 2. 加入母國 (代碼, 數值 0, 提示)
+            let userHomeCountryName = userProfile.nation ? userProfile.nation.n : null;
+            if (userHomeCountryName) {
+                const homeCode = getCode(userHomeCountryName);
+                dataArray.push([homeCode, 0, "我的母國: " + userHomeCountryName]);
+            }
 
-            const options = {
-                backgroundColor: '#ffffff', 
+            // 3. 加入性夥伴國家 (代碼, 數值 >=1, 提示)
+            for (let code in nationCounts) {
+                // 找出中文名用於 tooltip
+                const countryObj = COUNTRY_LIST.find(c => c.c === code);
+                const chineseName = countryObj ? countryObj.n : code;
+        
+                // 如果該國不是母國，才加入紅點數據
+                if (userHomeCountryName && code === getCode(userHomeCountryName)) continue;
+                dataArray.push([code, nationCounts[code], `${chineseName}: ${nationCounts[code]} 人`]);
+            }
+
+           if (dataArray.length === 1) return;
+
+           const data = google.visualization.arrayToDataTable(dataArray);
+           const options = {
+                colorAxis: {
+                    values: [0, 1, Math.max(...Object.values(nationCounts), 1)],
+                    colors: ['#76C846', '#FFC1CC', '#E91E63'] // 綠色(母國), 淺粉, 深紅
+                },
+                backgroundColor: 'transparent',
                 datalessRegionColor: '#f5f5f5',
-                defaultColor: '#f5f5f5',
-                colorAxis: {colors: ['#F8BBD0', '#E91E63']}, 
-                tooltip: {textStyle: {color: '#333'}, showColorCode: true},
-                legend: 'none',
-                displayMode: 'regions', 
-                keepAspectRatio: true,
-                // 修復：加上 width/height '100%' 確保填滿
-                width: '100%',
-                height: '100%'
+                legend: 'none'
             };
 
             const chart = new google.visualization.GeoChart(mapContainer);
@@ -2358,133 +2418,153 @@ window.compressImage = function(f) {
                 }
             }, 100);
         };
-        function calculateFavorites() {
-            // 新版統計邏輯：同時支援多位演員 + 影片 + 性夥伴
-            const actorCounts = {}; 
-            const videoCounts = {};
-            const partnerCounts = {}; // 新增：性夥伴計數
+        // --- 1. 核心統計與數據更新函式 ---
+function calculateFavorites() {
+    const actorCounts = {}; 
+    const videoCounts = {};
+    const partnerCounts = {}; 
 
-            ejaculationRecords.forEach(r => {
-                // 1. 統計性夥伴
-                if (r.partners && Array.isArray(r.partners)) {
-                    r.partners.forEach(p => {
-                        partnerCounts[p.name] = (partnerCounts[p.name] || 0) + 1;
-                    });
-                }
-
-                // 2. 統計演員與影片 (原本的邏輯)
-                const relatedActorIds = new Set();
-                if (r.usedActors && r.usedActors.length > 0) {
-                    r.usedActors.forEach(a => relatedActorIds.add(a.id));
-                }
-                if (r.usedVideo) {
-                    videoCounts[r.usedVideo.id] = (videoCounts[r.usedVideo.id] || 0) + 1;
-                    if (r.usedVideo.parentId) relatedActorIds.add(r.usedVideo.parentId);
-                }
-                if (r.target) {
-                    if (r.target.type === 'actor') {
-                        relatedActorIds.add(r.target.id);
-                    } else if (r.target.type === 'video') {
-                        videoCounts[r.target.id] = (videoCounts[r.target.id] || 0) + 1;
-                        if (r.target.parentId) relatedActorIds.add(r.target.parentId);
-                    }
-                }
-                relatedActorIds.forEach(id => {
-                    actorCounts[id] = (actorCounts[id] || 0) + 1;
-                });
+    // 掃描紀錄進行次數統計
+    ejaculationRecords.forEach(r => {
+        if (r.partners && Array.isArray(r.partners)) {
+            r.partners.forEach(p => {
+                partnerCounts[p.name] = (partnerCounts[p.name] || 0) + 1;
             });
+        }
 
-            // --- 整理資料 ---
-
-            // A. 性夥伴排行榜
-            const partnerStats = [];
-            Object.keys(partnerCounts).forEach(name => {
-                // 嘗試從 partnerProfiles 找頭像
-                const profile = partnerProfiles.find(p => p.name === name);
-                const count = partnerCounts[name];
-                
-                // 💡 過濾邏輯：如果您覺得「只約1次」的沒意義，可以在這裡把下一行解開註解：
-                // if (count < 2) return; 
-
-                partnerStats.push({
-                    data: { name: name }, // 傳遞名字供跳轉使用
-                    type: 'partner',
-                    count: count,
-                    name: name,
-                    img: (profile && profile.photo) ? profile.photo : "" // 如果有檔案就用照片
-                });
-            });
-
-            // B. 演員排行榜
-            const actorsStats = [];
-            actorProfiles.forEach(a => {
-                // 🔥 過濾掉合輯 (isCollection 為 true 者不加入排行榜)
-                if (a.isCollection) return; 
-
-                const count = actorCounts[a.id] || 0;
-                if (count > 0) {
-                actorsStats.push({ 
-                data: a, type: 'actor', count: count, name: a.name, img: a.avatar || DEFAULT_AVATAR 
-             });
-         }
+        const relatedActorIds = new Set();
+        if (r.usedActors && r.usedActors.length > 0) {
+            r.usedActors.forEach(a => relatedActorIds.add(a.id));
+        }
+        if (r.usedVideo) {
+            videoCounts[r.usedVideo.id] = (videoCounts[r.usedVideo.id] || 0) + 1;
+            if (r.usedVideo.parentId) relatedActorIds.add(r.usedVideo.parentId);
+        }
+        if (r.target) {
+            if (r.target.type === 'actor') relatedActorIds.add(r.target.id);
+            else if (r.target.type === 'video') {
+                videoCounts[r.target.id] = (videoCounts[r.target.id] || 0) + 1;
+                if (r.target.parentId) relatedActorIds.add(r.target.parentId);
+            }
+        }
+        relatedActorIds.forEach(id => {
+            actorCounts[id] = (actorCounts[id] || 0) + 1;
+        });
     });
 
-            // C. 影片排行榜
-            const videosStats = [];
-            actorProfiles.forEach(a => {
-                if (a.videos) {
-                    a.videos.forEach(v => {
-                        const vCount = videoCounts[v.id] || 0;
-                        if (vCount > 0) {
-                            videosStats.push({ 
-                                data: { ...v, parentId: a.id }, type: 'video', count: vCount, name: v.title, img: v.thumbnail || "" 
-                            });
-                        }
+    // --- 更新 Fuck Buddies 卡片 ---
+    if(window.syncPartnersFromRecords) window.syncPartnersFromRecords();
+
+    const currentPartners = partnerProfiles.length; 
+    // 修正：改用 userProfile 變數
+    const pastPartners = parseInt(userProfile.pastPartnerCount) || 0; 
+    const totalBodyCount = currentPartners + pastPartners;
+
+    const partnerDisplay = document.getElementById('stat-partner-count');
+    if(partnerDisplay) partnerDisplay.textContent = totalBodyCount;
+
+    const uniqueNations = new Set();
+    partnerProfiles.forEach(p => {
+        if (p.nation && p.nation.n) uniqueNations.add(p.nation.n);
+    });
+    const nationDisplay = document.getElementById('stat-nation-count');
+    if(nationDisplay) nationDisplay.textContent = uniqueNations.size;
+
+    // --- 準備排行榜數據 ---
+    const actorsStats = [];
+    actorProfiles.forEach(a => {
+        if (a.isCollection) return; 
+        const count = actorCounts[a.id] || 0;
+        if (count > 0) {
+            actorsStats.push({ 
+                data: a, type: 'actor', count: count, name: a.name, img: a.avatar || DEFAULT_AVATAR 
+            });
+        }
+    });
+
+    const videosStats = [];
+    actorProfiles.forEach(a => {
+        if (a.videos) {
+            a.videos.forEach(v => {
+                const vCount = videoCounts[v.id] || 0;
+                if (vCount > 0) {
+                    videosStats.push({ 
+                        data: { ...v, parentId: a.id }, type: 'video', count: vCount, name: v.title, img: v.thumbnail || "" 
                     });
                 }
             });
-
-            // 排序 (次數多 -> 少)
-            partnerStats.sort((a,b) => b.count - a.count);
-            actorsStats.sort((a,b) => b.count - a.count);
-            videosStats.sort((a,b) => b.count - a.count);
-
-            // 渲染
-            renderRankList('top-partners-list', partnerStats); // 新增
-            renderRankList('top-actors-list', actorsStats);
-            renderRankList('top-videos-list', videosStats);
         }
-        function renderRankList(containerId, list) {
-            const el = document.getElementById(containerId);
-            el.innerHTML = '';
-            if (list.length === 0) {
-                el.innerHTML = '<div style="color:#999;font-size:13px;text-align:center;padding:10px;">尚無資料</div>';
-                return;
-            }
+    });
 
-            const max = list[0].count;
-            // 預設顯示前 5 筆
-            const initialShow = list.slice(0, 5);
-            const hiddenItems = list.slice(5);
+    actorsStats.sort((a,b) => b.count - a.count);
+    videosStats.sort((a,b) => b.count - a.count);
 
-            initialShow.forEach((item, idx) => {
-                el.appendChild(createRankItem(item, idx, max));
+    // --- 執行渲染 (確保函式存在) ---
+    renderRankList('top-actors-list', actorsStats);
+    renderRankList('top-videos-list', videosStats);
+}
+
+// --- 2. 遺失的渲染函式 (這次務必貼上) ---
+function renderRankList(containerId, list) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '';
+    
+    if (list.length === 0) {
+        el.innerHTML = '<div style="color:#999;font-size:13px;text-align:center;padding:10px;">尚無資料</div>';
+        return;
+    }
+
+    const max = list[0].count;
+    const initialShow = list.slice(0, 5);
+    const hiddenItems = list.slice(5);
+
+    initialShow.forEach((item, idx) => {
+        el.appendChild(createRankItem(item, idx, max));
+    });
+
+    if (hiddenItems.length > 0) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-show-more';
+        btn.textContent = `🔽 顯示全部 (還有 ${hiddenItems.length} 位)`;
+        btn.onclick = () => {
+            hiddenItems.forEach((item, idx) => {
+                el.appendChild(createRankItem(item, idx + 5, max));
             });
+            btn.remove();
+        };
+        el.appendChild(btn);
+    }
+}
 
-            if (hiddenItems.length > 0) {
-                const btn = document.createElement('button');
-                btn.className = 'btn-show-more';
-                btn.textContent = `🔽 顯示全部 (還有 ${hiddenItems.length} 位)`;
-                btn.onclick = () => {
-                    hiddenItems.forEach((item, idx) => {
-                        // idx + 5 因為是接續的排名
-                        el.appendChild(createRankItem(item, idx + 5, max));
-                    });
-                    btn.remove(); // 移除按鈕
-                };
-                el.appendChild(btn); // 按鈕放在最後
-            }
-        }
+// --- 3. 列表項目生成函式 ---
+function createRankItem(item, idx, max) {
+    const div = document.createElement('div');
+    div.className = 'rank-item';
+    div.onclick = () => jumpToTarget({ 
+        type: item.type, 
+        id: item.data.id, 
+        parentId: item.data.parentId,
+        name: item.data.name || item.name
+    });
+    
+    const rankClass = idx < 3 ? `top-${idx+1}` : '';
+    const imgClass = item.type === 'video' ? 'video-type' : '';
+    const imgHtml = item.img ? `<img src="${item.img}" class="rank-img ${imgClass}">` : `<div class="rank-img ${imgClass}" style="background:#eee;display:flex;align-items:center;justify-content:center;">${item.type==='actor'?'👤':'🎬'}</div>`;
+    const percent = (item.count / max) * 100;
+
+    div.innerHTML = `
+        <div class="rank-num ${rankClass}">${idx + 1}</div>
+        ${imgHtml}
+        <div class="rank-info">
+            <div class="rank-name">${item.name}</div>
+            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${percent}%"></div></div>
+        </div>
+        <div class="rank-count">${item.count}次</div>
+    `;
+    return div;
+}
+
 
         function createRankItem(item, idx, max) {
             const div = document.createElement('div');
@@ -4057,33 +4137,96 @@ window.toggleActorTypeLabel = function() {
             document.getElementById('partner-form-modal').classList.add('active');
         };
 
-        // 國籍搜尋邏輯
+        // --- 國家搜尋與選擇系統 (修正版) ---
         function setupCountrySearch() {
             const input = document.getElementById('pf-nation-search');
             const hidden = document.getElementById('pf-nation-data');
             const list = document.getElementById('pf-nation-suggestions');
             
-            input.addEventListener('input', () => {
-                const term = input.value.trim().toLowerCase();
-                if(!term) { list.style.display = 'none'; return; }
-                
-                const matches = COUNTRY_LIST.filter(c => c.n.includes(term) || c.f.includes(term));
-                if(matches.length > 0) {
-                    list.innerHTML = matches.map(c => `
-                        <div class="suggestion-item" onclick='selectCountry(${JSON.stringify(c)})'>
-                            <span style="font-size:18px;margin-right:8px;">${c.f}</span> ${c.n}
-                        </div>
-                    `).join('');
-                    list.style.display = 'block';
-                } else { list.style.display = 'none'; }
-            });
+            // 夥伴編輯頁面的即時搜尋
+            if(input) {
+                input.addEventListener('input', () => {
+                    const term = input.value.trim().toLowerCase();
+                    if(!term) { list.style.display = 'none'; return; }
+                    
+                    const matches = COUNTRY_LIST.filter(c => c.n.includes(term) || c.f.includes(term));
+                    if(matches.length > 0) {
+                        list.innerHTML = matches.map(c => `
+                            <div class="suggestion-item" onclick='selectNation(${JSON.stringify(c)})'>
+                                <span style="font-size:18px;margin-right:8px;">${c.f}</span> ${c.n}
+                            </div>
+                        `).join('');
+                        list.style.display = 'block';
+                    } else { list.style.display = 'none'; }
+                });
+            }
+        } // 修正：補上遺失的結束大括號，解救後面的所有功能
 
-            window.selectCountry = (c) => {
-                input.value = c.n;
-                hidden.value = JSON.stringify(c);
-                list.style.display = 'none';
-            };
-        }
+        // --- 國家搜尋與選擇系統 (修正版) ---
+        window.showNationPicker = function(target) {
+            if (target) window.tempNationTarget = target;
+            const modal = document.getElementById('nation-picker-modal');
+            const input = document.getElementById('nation-search-input');
+            if (modal && input) {
+                input.value = ''; // 清空搜尋文字
+                renderNationList(''); // 載入初始清單
+                modal.classList.add('active');
+                setTimeout(() => input.focus(), 300);
+            }
+        };
+
+        window.closeNationPicker = function() {
+            const modal = document.getElementById('nation-picker-modal');
+            if(modal) modal.classList.remove('active');
+        };
+
+        window.selectNation = function(nationObj) {
+            // 判斷是從「個人設定」開啟，還是從「夥伴編輯」開啟
+            if (window.tempNationTarget === 'user') {
+                userProfile.nation = nationObj;
+               const flagEl = document.getElementById('user-nation-flag');
+                const nameEl = document.getElementById('user-nation-name');
+                if(flagEl) flagEl.textContent = nationObj.f;
+                if(nameEl) nameEl.textContent = nationObj.n;
+        
+                // 立即儲存設定
+                localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile));
+            } else {
+                // 夥伴編輯表單邏輯
+                const hidden = document.getElementById('pf-nation-data');
+                if(hidden) hidden.value = JSON.stringify(nationObj);
+                const input = document.getElementById('pf-nation-search');
+                if(input) input.value = nationObj.n;
+                const list = document.getElementById('pf-nation-suggestions');
+                if(list) list.style.display = 'none';
+            }
+            closeNationPicker();
+        };
+
+        window.renderNationList = function(keyword) {
+            const container = document.getElementById('nation-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+    
+            const term = keyword.toLowerCase();
+
+    const filtered = COUNTRY_LIST.filter(c => 
+        c.n.includes(term) || c.c.toLowerCase().includes(term)
+    );
+
+    filtered.forEach(country => {
+        const item = document.createElement('div');
+        item.className = 'suggestion-item';
+        item.style.padding = '15px';
+        item.style.borderBottom = '1px solid var(--color-border)';
+        item.innerHTML = `
+            <span style="font-size:20px; margin-right:12px;">${country.f}</span>
+            <span style="font-size:16px;">${country.n}</span>
+        `;
+        item.onclick = () => selectNation(country);
+        container.appendChild(item);
+    });
+};
         window.showDriverList = function() {
             document.getElementById('driver-view-list').classList.add('active');
             document.getElementById('driver-view-detail').classList.remove('active');
