@@ -1332,7 +1332,7 @@ body.dark-mode .calendar-day.today {
                     <input type="date" id="setting-birthday" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">我的母國</label>
+                    <label class="form-label">國籍</label>
                     <div id="user-nation-btn" class="nation-select-btn" onclick="showNationPicker('user');" style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer;">
                          <span id="user-nation-flag" style="margin-right: 8px;">🏳️</span>
                          <span id="user-nation-name">選擇國家</span>
@@ -1486,7 +1486,7 @@ body.dark-mode .calendar-day.today {
         <span class="slider round"></span>
     </label>
 </div>
-        <div class="form-group"><label class="form-label">頭像 (貼網址 或 上傳)</label><input type="url" id="actor-avatar-url" class="form-control" placeholder="https://..."><label for="actor-file-input" class="photo-upload-label">📁 上傳本地圖片</label><input type="file" id="actor-file-input" accept="image/*" style="display:none"><img id="actor-preview" class="photo-preview"></div><div class="form-group"><label class="form-label">個人網站 / X (Twitter)</label><input type="url" id="actor-website" class="form-control" placeholder="https://twitter.com/..."></div><div class="form-group" style="position:relative;"><label class="form-label">標籤 (Hashtag)</label><input type="text" id="actor-tags" class="form-control" placeholder="#巨屌 #Daddy (用空白分隔)" autocomplete="off"><div id="tag-suggestions" class="suggestions-dropdown"></div></div><div class="form-group"><label class="form-label">簡介</label><textarea id="actor-bio" class="form-control" rows="5" placeholder="簡介 (選填)"></textarea></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="closeActorFormModal()">取消</button><button type="submit" id="actor-form-submit" class="btn-base btn-primary" style="flex:1">儲存</button></div></form></div></div>
+        <div class="form-group"><label class="form-label">頭像 (貼網址 或 上傳)</label><input type="url" id="actor-avatar-url" class="form-control" placeholder="https://..."><label for="actor-file-input" class="photo-upload-label">📁 上傳本地圖片</label><input type="file" id="actor-file-input" accept="image/*" style="display:none"><img id="actor-preview" class="photo-preview"></div><div class="form-group"><label class="form-label">個人網站 / X (Twitter)</label><input type="url" id="actor-website" class="form-control" placeholder="https://twitter.com/..."></div><div class="form-group" style="position:relative;"><label class="form-label">標籤 (Hashtag)</label><input type="text" id="actor-tags" class="form-control" placeholder="#(用空白分隔)" autocomplete="off"><div id="tag-suggestions" class="suggestions-dropdown"></div></div><div class="form-group"><label class="form-label">簡介</label><textarea id="actor-bio" class="form-control" rows="5" placeholder="簡介 (選填)"></textarea></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="closeActorFormModal()">取消</button><button type="submit" id="actor-form-submit" class="btn-base btn-primary" style="flex:1">儲存</button></div></form></div></div>
     <div id="video-form-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><h3 id="video-form-title" style="margin:0 0 20px 0;font-size:20px;">影片資訊</h3><form id="video-form"><div class="form-group"><label class="form-label">標題</label><input type="text" id="video-title" class="form-control" required></div><div class="form-group"><label class="form-label">連結</label><input type="url" id="video-url" class="form-control" placeholder="https://..." required></div><div class="form-group"><label class="form-label">封面 (貼網址 或 上傳)</label><input type="url" id="video-thumb-url" class="form-control" placeholder="https://..."><label for="video-file-input" class="photo-upload-label">📁 上傳封面圖</label><input type="file" id="video-file-input" accept="image/*" style="display:none"><img id="video-preview" class="photo-preview"></div><!-- Video Tags --><div class="form-group" style="position:relative;"><label class="form-label">標籤 (Hashtag)</label><input type="text" id="video-tags" class="form-control" placeholder="#cum #bukkake (用空白分隔)" autocomplete="off"><div id="video-tag-suggestions" class="suggestions-dropdown"></div></div><div class="form-group"><label class="form-label">備註</label><textarea id="video-note" class="form-control"></textarea></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="closeVideoFormModal()">取消</button><button type="submit" id="video-form-submit" class="btn-base btn-primary" style="flex:1">儲存</button></div></form></div></div>
     <div id="video-detail-modal" class="modal-overlay bottom-sheet"><div class="modal-content-bottom"><div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button class="btn-close" onclick="closeVideoDetail()">×</button></div><div id="vid-detail-cover-box" class="vid-detail-cover-box" style="display:none"><img id="vid-detail-cover" class="vid-detail-cover"></div><div id="vid-detail-title" class="vid-detail-title"></div><div id="vid-detail-note" class="vid-detail-note" style="display:none"></div><div class="vid-actions"><button id="vid-btn-edit" class="btn-base" style="background:#eee;color:#333;">✏️ 編輯</button><button id="vid-btn-delete" class="btn-base btn-danger">🗑️ 刪除</button><button id="vid-btn-watch" class="btn-base btn-accent vid-main-action">🚀 前往觀看</button></div></div></div>
     <div id="photo-form-modal" class="modal-overlay bottom-sheet">
@@ -1568,12 +1568,15 @@ body.dark-mode .calendar-day.today {
                         </div>
                     </div>
                 </div>
-                <div class="form-group" style="position:relative;">
-                    <label class="form-label">國籍 (搜尋)</label>
-                    <input type="text" id="pf-nation-search" class="form-control" placeholder="輸入關鍵字 (如: 台灣, Jap...)" autocomplete="off">
-                    <input type="hidden" id="pf-nation-data"> <div id="pf-nation-suggestions" class="suggestions-dropdown"></div>
+                <div class="form-group">
+                    <label class="form-label">國籍</label>
+                    <div id="pf-nation-btn" class="nation-select-btn" onclick="showNationPicker('partner');" style="display: flex; align-items: center; padding: 10px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-input-bg); cursor: pointer;">
+                         <span id="pf-nation-flag" style="margin-right: 8px;">🏳️</span>
+                         <span id="pf-nation-name">選擇國家</span>
+                   </div>
+                    <input type="hidden" id="pf-nation-data">
                 </div>
-                <div class="form-group"><label class="form-label">人種 / 備註</label><textarea id="pf-race" class="form-control" placeholder="例如：拉丁裔, 混血..."></textarea></div>
+                <div class="form-group"><label class="form-label">備註</label><textarea id="pf-race" class="form-control"></textarea></div>
                 
                 <div style="display:flex;gap:10px;margin-top:20px;">
                     <button type="button" class="btn-base" style="background:#eee;color:#666;flex:1" onclick="document.getElementById('partner-form-modal').classList.remove('active')">取消</button>
@@ -2349,7 +2352,7 @@ window.compressImage = function(f) {
             let userHomeCountryName = userProfile.nation ? userProfile.nation.n : null;
             if (userHomeCountryName) {
                 const homeCode = getCode(userHomeCountryName);
-                dataArray.push([homeCode, 0, "我的母國: " + userHomeCountryName]);
+                dataArray.push([homeCode, 0, "Your Country: " + userHomeCountryName]);
             }
 
             // 3. 加入性夥伴國家 (代碼, 數值 >=1, 提示)
@@ -4113,25 +4116,29 @@ window.toggleActorTypeLabel = function() {
                 showAlert('夥伴資料已刪除，歷史關聯已解除。');
             });
         };
+
         window.openPartnerEditForm = function() {
             const p = partnerProfiles.find(x => x.name === currentPartnerName);
             if(!p) return;
-            document.getElementById('partner-detail-modal').classList.remove('active'); // 暫時關閉詳情
-            
+            document.getElementById('partner-detail-modal').classList.remove('active'); 
+    
             document.getElementById('pf-name').value = p.name;
-            document.getElementById('pf-url').value = "";
-            document.getElementById('pf-file').value = "";
             document.getElementById('pf-preview').src = p.photo || DEFAULT_AVATAR;
-            
             document.getElementById('pf-race').value = p.race || "";
-            
-            // 設定國籍
+    
+            // --- 國籍顯示邏輯更新 ---
+            const flagEl = document.getElementById('pf-nation-flag');
+            const nameEl = document.getElementById('pf-nation-name');
+            const dataEl = document.getElementById('pf-nation-data');
+
             if(p.nation) {
-                document.getElementById('pf-nation-search').value = p.nation.n;
-                document.getElementById('pf-nation-data').value = JSON.stringify(p.nation);
+                flagEl.textContent = p.nation.f;
+                nameEl.textContent = p.nation.n;
+                dataEl.value = JSON.stringify(p.nation);
             } else {
-                document.getElementById('pf-nation-search').value = "";
-                document.getElementById('pf-nation-data').value = "";
+                flagEl.textContent = '🏳️';
+                nameEl.textContent = '選擇國家';
+                dataEl.value = "";
             }
 
             document.getElementById('partner-form-modal').classList.add('active');
@@ -4181,24 +4188,24 @@ window.toggleActorTypeLabel = function() {
         };
 
         window.selectNation = function(nationObj) {
-            // 判斷是從「個人設定」開啟，還是從「夥伴編輯」開啟
             if (window.tempNationTarget === 'user') {
+                // --- 個人設定邏輯 ---
                 userProfile.nation = nationObj;
-               const flagEl = document.getElementById('user-nation-flag');
+                const flagEl = document.getElementById('user-nation-flag');
                 const nameEl = document.getElementById('user-nation-name');
                 if(flagEl) flagEl.textContent = nationObj.f;
                 if(nameEl) nameEl.textContent = nationObj.n;
-        
-                // 立即儲存設定
                 localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile));
-            } else {
-                // 夥伴編輯表單邏輯
+            } else if (window.tempNationTarget === 'partner') {
+                // --- 性夥伴編輯邏輯 (新增/修正) ---
                 const hidden = document.getElementById('pf-nation-data');
                 if(hidden) hidden.value = JSON.stringify(nationObj);
-                const input = document.getElementById('pf-nation-search');
-                if(input) input.value = nationObj.n;
-                const list = document.getElementById('pf-nation-suggestions');
-                if(list) list.style.display = 'none';
+        
+                // 更新顯示的國旗與名字
+                const flagEl = document.getElementById('pf-nation-flag');
+                const nameEl = document.getElementById('pf-nation-name');
+                if(flagEl) flagEl.textContent = nationObj.f;
+                if(nameEl) nameEl.textContent = nationObj.n;
             }
             closeNationPicker();
         };
