@@ -1311,20 +1311,29 @@ body.dark-mode .calendar-day.today {
             <div id="stats-view-charts">
                 <div id="stats-content" style="display:none;">
                     <div class="stats-metrics">
-                        <div class="metric-card" style="grid-column: span 2; background: linear-gradient(135deg, var(--color-card-bg) 0%, rgba(118, 200, 70, 0.05) 100%); border-color: var(--color-primary);">
-                            <div class="metric-title" style="font-size:13px; color:var(--color-primary);">🏆 歷史總計</div>
-                            <div class="metric-value" style="font-size:3rem;"><span id="stat-total">0</span><span class="metric-unit">次</span></div>
-                        </div>
+                                    <div class="metric-card" style="grid-column: span 2; background: linear-gradient(135deg, var(--color-card-bg) 0%, rgba(118, 200, 70, 0.05) 100%); border-color: var(--color-primary);">
+                                        <div class="metric-title" style="font-size:13px; color:var(--color-primary);">🏆 歷史總計</div>
+                                        <div class="metric-value" style="font-size:3rem;"><span id="stat-total">0</span><span class="metric-unit">次</span></div>
+                                    </div>
 
-                        <div class="metric-card"><div class="metric-title">📅 今年累積</div><div class="metric-value"><span id="stat-year">0</span><span class="metric-unit">次</span></div></div>
-                        <div class="metric-card"><div class="metric-title">🥛 產精總量</div><div class="metric-value"><span id="stat-milk-volume">0</span><span class="metric-unit" id="stat-milk-unit">ml</span></div><div id="stat-milk-equivalent" style="font-size:11px; color:#aaa; margin-top:4px;">累積中...</div></div>
-                        <div class="metric-card"><div class="metric-title">🔥 最長連擊</div><div class="metric-value"><span id="stat-streak">0</span><span class="metric-unit">天</span></div></div>
-                        <div class="metric-card"><div class="metric-title">🧘 最長禁慾</div><div class="metric-value"><span id="stat-abstinence">0</span><span class="metric-unit">天</span></div></div>
-                        
-                        <div class="metric-card"><div class="metric-title">🖐️ 自慰總計</div><div class="metric-value"><span id="stat-type-m">0</span><span class="metric-unit">次</span></div></div>
-                        <div class="metric-card"><div class="metric-title">👨‍❤️‍👨 做愛總計</div><div class="metric-value"><span id="stat-type-s">0</span><span class="metric-unit">次</span></div></div>
-                        <div class="metric-card"><div class="metric-title">💤 夢遺總計</div><div class="metric-value"><span id="stat-type-w">0</span><span class="metric-unit">次</span></div></div>
-                    </div>
+                                    <div class="metric-card" style="grid-column: span 2;">
+                                        <div class="metric-title">🥛 產精總量</div>
+                                        <div class="metric-value">
+                                            <span id="stat-milk-volume">0</span>
+                                            <span class="metric-unit" id="stat-milk-unit">ml</span>
+                                        </div>
+                                        <div id="stat-milk-equivalent" style="font-size:13px; color:#888; margin-top:4px; font-weight:normal;">累積中...</div>
+                                    </div>
+
+                                    <div class="metric-card"><div class="metric-title">📅 今年累積</div><div class="metric-value"><span id="stat-year">0</span><span class="metric-unit">次</span></div></div>
+                                    <div class="metric-card"><div class="metric-title">🔥 最長連擊</div><div class="metric-value"><span id="stat-streak">0</span><span class="metric-unit">天</span></div></div>
+                
+                                    <div class="metric-card"><div class="metric-title">🧘 最長禁慾</div><div class="metric-value"><span id="stat-abstinence">0</span><span class="metric-unit">天</span></div></div>
+                                    <div class="metric-card"><div class="metric-title">🖐️ 自慰總計</div><div class="metric-value"><span id="stat-type-m">0</span><span class="metric-unit">次</span></div></div>
+                
+                                    <div class="metric-card"><div class="metric-title">👨‍❤️‍👨 做愛總計</div><div class="metric-value"><span id="stat-type-s">0</span><span class="metric-unit">次</span></div></div>
+                                    <div class="metric-card"><div class="metric-title">💤 夢遺總計</div><div class="metric-value"><span id="stat-type-w">0</span><span class="metric-unit">次</span></div></div>
+                                </div>
                     <div class="chart-container"><div class="section-header">生理週期分析</div><canvas id="weeklyChart"></canvas></div>
                     <div id="yearly-stats-container"><div class="section-header" style="margin-top:30px;">📜 歷年戰績回顧</div><div id="yearly-list"></div></div>
                     
@@ -2090,7 +2099,7 @@ body.dark-mode .calendar-day.today {
             { id: 'count_300', icon: '⚒️', title: '斯巴達的逆襲', desc: '累計自慰 300 次', msg: '300 發的意志！今晚，床邊一戰再戰！', type: 'count', thres: 300, category: 'A', catTitle: '單人副本' },
             { id: 'count_500', icon: '🤖', title: '無情的發射機器', desc: '累計自慰 500 次', msg: '你已經沒有感情，全是技巧。', type: 'count', thres: 500, category: 'A', catTitle: '單人副本' },
             { id: 'count_1000', icon: '💪', title: '傳說中的麒麟臂', desc: '累計自慰 1000 次', msg: '你的慣用手已經超越了人類極限，可以擊穿鋼板了吧？', type: 'count', thres: 1000, category: 'A', catTitle: '單人副本' },
-            
+
             // Category B: Special Dates (特別的一天)
             { id: 'special_bday', icon: '🎂', title: '獨自吹蠟燭', desc: '生日當天自慰', msg: '許個願吧...然後親手實現它。祝你生日快樂！', type: 'special', isBday: true, category: 'B', catTitle: '特別的一天' },
             { id: 'special_newyear', icon: '🎆', title: '搶頭香', desc: 'Happy New Year。', msg: '雖然沒有煙火，但你自己放了一發慶祝。好的開始是成功的一半？', type: 'special', date: '01-01', category: 'B', catTitle: '特別的一天' },
@@ -2119,7 +2128,14 @@ body.dark-mode .calendar-day.today {
             { id: 'sex_100', icon: '⚔️', title: '百人斬...嗎？', desc: '累計做愛 100 次', msg: '累積了一百場戰役。不管對手是同一個還是一百個，你都是英雄。', type: 'sex_count', thres: 100, category: 'E', catTitle: '人與人的連結' },
             { id: 'sex_loyalty', icon: '🐴', title: '專情種馬', desc: '累計與同一位性夥伴超過 10 次', msg: '弱水三千，你只取一瓢... 然後狂喝猛喝。真愛無誤！', type: 'sex_same_partner', thres: 11, category: 'E', catTitle: '人與人的連結' },
             { id: 'sex_harem', icon: '⏱️', title: '時間管理大師', desc: '累計 10 位不同的性夥伴', msg: '你的通訊錄是不是很精彩？記得不要叫錯名字，這是過來人的建議。', type: 'sex_unique_partners', thres: 10, category: 'E', catTitle: '人與人的連結' },
-            { id: 'sex_diplomat', icon: '🌍', title: '國民外交官', desc: '累計 10 個不同國籍的性夥伴', msg: '致力於促進跨國文化的『深入』交流，諾貝爾和平獎應該頒給你。', type: 'sex_unique_nations', thres: 10, category: 'E', catTitle: '人與人的連結' }
+            { id: 'sex_diplomat', icon: '🌍', title: '國民外交官', desc: '累計 10 個不同國籍的性夥伴', msg: '致力於促進跨國文化的『深入』交流，諾貝爾和平獎應該頒給你。', type: 'sex_unique_nations', thres: 10, category: 'E', catTitle: '人與人的連結' },
+
+            // Category F: Volume (產量里程碑) - NEW
+            { id: 'vol_700', icon: '🧋', title: '全糖去冰', desc: '累積產量 700ml', msg: '這杯大杯珍奶是特調的，充滿了你的濃稠精華。記得搖一搖再喝。', type: 'volume', thres: 700, category: 'F', catTitle: '產量里程碑' },
+            { id: 'vol_930', icon: '🐄', title: '牧場大亨', desc: '累積產量 930ml', msg: '新鮮直送！這瓶家庭號的蛋白質含量爆表，請冷藏保存。', type: 'volume', thres: 930, category: 'F', catTitle: '產量里程碑' },
+            { id: 'vol_2000', icon: '🥤', title: '快樂泉源', desc: '累積產量 2L', msg: '比可樂還帶勁！這瓶胖胖瓶如果噴發出來，場面一定很壯觀。', type: 'volume', thres: 2000, category: 'F', catTitle: '產量里程碑' },
+            { id: 'vol_3700', icon: '🎨', title: '粉刷大師', desc: '累積產量 3.7L (1加侖)', msg: '整整一桶乳膠漆。打算把房間漆成純白色的嗎？', type: 'volume', thres: 3700, category: 'F', catTitle: '產量里程碑' },
+            { id: 'vol_18900', icon: '💧', title: '生命之水', desc: '累積產量 18.9L (5加侖)', msg: '辦公室桶裝水等級！太佩服了？', type: 'volume', thres: 18900, category: 'F', catTitle: '產量里程碑' }
         ];
 
         // --- 2. Core Helper Functions (Moved to Global Scope) ---
@@ -2982,29 +2998,27 @@ window.checkStorageUsage = function() {
             const unlockedIDs = unlockedAchievements.map(u => u.id); 
             let firstUnlockAch = null;
 
-            // 這裡記得加入 'E' 類別
-            const categories = ['A', 'B', 'C', 'D', 'E'];
+            // 這裡記得加入 'E' 和 'F' 類別
+            // --- 🟢 修改：加入 'F' ---
+            const categories = ['A', 'B', 'C', 'D', 'E', 'F']; 
+            // -----------------------
 
             ACHIEVEMENTS_DATA.forEach(ach => {
                 if(unlockedIDs.includes(ach.id)) return; 
                 let pass = false;
                 
-                if(ach.type==='count') {
-                    if (ach.id === 'count_1') { if (count >= ach.thres) pass = true; } 
-                    else { if (masturbationCount >= ach.thres) pass = true; }
-                }
+                if(ach.type==='count') { /* ... */ }
                 if(ach.type==='abs' && maxAbs>=ach.thres) pass=true;
                 if(ach.type==='streak' && maxStreak >= ach.thres) pass = true;
-                if(ach.type==='special') {
-                    if(ach.date && masturbationDates.includes(ach.date)) pass=true;
-                    if(ach.dates && ach.dates.some(d=>masturbationDates.includes(d))) pass=true;
-                    if(ach.isBday && bday && masturbationDates.includes(bday)) pass=true;
-                }
-                // 性夥伴成就
+                if(ach.type==='special') { /* ... */ }
                 if(ach.type==='sex_count' && sexCount >= ach.thres) pass = true;
                 if(ach.type==='sex_same_partner' && maxSamePartnerCount >= ach.thres) pass = true;
                 if(ach.type==='sex_unique_partners' && uniquePartners.size >= ach.thres) pass = true;
                 if(ach.type==='sex_unique_nations' && uniqueNationCount >= ach.thres) pass = true;
+
+                // --- 🟢 新增：產量成就判斷邏輯 ---
+                if(ach.type==='volume' && totalVolume >= ach.thres) pass = true;
+                // -----------------------------
 
                 if(pass) {
                     const todayStr = new Date().toLocaleDateString();
@@ -3033,8 +3047,11 @@ window.checkStorageUsage = function() {
         function renderAchievements() {
             const container = document.getElementById('ach-list-container'); 
             container.innerHTML='';
-            // 修正：加入 'E' 類別
-            const categories = ['A', 'B', 'C', 'D', 'E'];
+            
+            // --- 🟢 修正這裡：一定要加入 'F'，不然新類別不會顯示 ---
+            const categories = ['A', 'B', 'C', 'D', 'E', 'F'];
+            // --------------------------------------------------
+
             const unlockedIDs = unlockedAchievements.map(u => u.id);
 
             categories.forEach(cat => {
@@ -5896,7 +5913,7 @@ window.toggleActorTypeLabel = function() {
             let percent = (currentMl / 500) * 100;
 
             // 5. 更新 DOM
-           const liquidEl = document.getElementById('milk-liquid');
+            const liquidEl = document.getElementById('milk-liquid');
             const currentEl = document.getElementById('milk-current-ml');
             const totalEl = document.getElementById('milk-total-ml');
             const badgeEl = document.getElementById('milk-cups-badge');
@@ -5913,23 +5930,21 @@ window.toggleActorTypeLabel = function() {
             const equivEl = document.getElementById('stat-milk-equivalent');
 
             if (volEl && unitEl && equivEl) {
+                // 強制隱藏提示語區塊
+                equivEl.style.display = 'none';
+
                 if (totalMl < 1000) {
                     // A. 未滿 1 公升：顯示 ml
                     volEl.textContent = totalMl;
                     unitEl.textContent = 'ml';
-                    equivEl.textContent = `再接再厲！還差 ${1000 - totalMl}ml 滿一公升`;
                 } else {
                     // B. 超過 1 公升：顯示 L (保留兩位小數)
-                    const liters = (totalMl / 1000).toFixed(2); // 例如 1.25
+                    const liters = (totalMl / 1000).toFixed(2); 
                     volEl.textContent = liters;
-                    unitEl.textContent = 'L (公升)';
-            
-                    // 趣味換算：以 1公升裝的家庭號牛奶為例
-                    // Math.floor(liters) 取整數瓶
-                    equivEl.textContent = `相當於 ${Math.floor(liters)} 瓶家庭號鮮乳 🐄`;
+                    unitEl.textContent = 'L'; // 簡化單位顯示
                 }
         
-                // 特殊字體顏色：如果超過 10 公升，把數字變金色 (彩蛋)
+                // 特殊字體顏色：如果超過 10 公升，把數字變金色
                 if (totalMl >= 10000) {
                     volEl.style.color = 'var(--color-gold)';
                 } else {
