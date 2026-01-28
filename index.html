@@ -1052,9 +1052,17 @@ body.dark-mode .calendar-day.today {
             border-top: none;
             border-radius: 0 0 15px 15px;
             position: relative;
-            background: rgba(255, 255, 255, 0.1);
+            
+            /* --- 🔴 修改這裡 (原本是 rgba(255, 255, 255, 0.1)) --- */
+            /* 改成淡藍色，讓白色的牛奶對比更明顯，也更有玻璃感 */
+            background: #E1F5FE;  
+            /* --------------------------------------------------- */
+
             overflow: hidden;
             z-index: 2;
+            
+            /* 建議：加一點內陰影讓杯子更有立體感 */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05); 
         }
 
         /* 杯口的反光效果 */
@@ -1077,7 +1085,10 @@ body.dark-mode .calendar-day.today {
             transition: height 1s cubic-bezier(0.4, 0.0, 0.2, 1);
             z-index: 1;
             min-height: 0px;
-            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.05);
+            /* --- 🔴 修改這裡：加強陰影對比 --- */
+            /* 讓液體頂部有一點點深色，區分液面和杯壁 */
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05), inset 0 -5px 10px rgba(0,0,0,0.02);
+            /* -------------------------------- */
         }
 
         /* 波浪動畫 */
@@ -1109,6 +1120,7 @@ body.dark-mode .calendar-day.today {
         }
         body.dark-mode .milk-glass {
             border-color: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.05); /* 這裡讓它在黑底變回透明感 */
         }
 
         .milk-info {
@@ -1305,7 +1317,7 @@ body.dark-mode .calendar-day.today {
                         </div>
 
                         <div class="metric-card"><div class="metric-title">📅 今年累積</div><div class="metric-value"><span id="stat-year">0</span><span class="metric-unit">次</span></div></div>
-                        <div class="metric-card"><div class="metric-title">🥛 產精總量</div><div class="metric-value"><span id="stat-milk-cups">0</span><span class="metric-unit">杯</span></div></div>
+                        <div class="metric-card"><div class="metric-title">🥛 產精總量</div><div class="metric-value"><span id="stat-milk-volume">0</span><span class="metric-unit" id="stat-milk-unit">ml</span></div><div id="stat-milk-equivalent" style="font-size:11px; color:#aaa; margin-top:4px;">累積中...</div></div>
                         <div class="metric-card"><div class="metric-title">🔥 最長連擊</div><div class="metric-value"><span id="stat-streak">0</span><span class="metric-unit">天</span></div></div>
                         <div class="metric-card"><div class="metric-title">🧘 最長禁慾</div><div class="metric-value"><span id="stat-abstinence">0</span><span class="metric-unit">天</span></div></div>
                         
@@ -5882,9 +5894,6 @@ window.toggleActorTypeLabel = function() {
     
             // 4. 計算百分比 (高度)
             let percent = (currentMl / 500) * 100;
-    
-            // 視覺修正：為了讓波浪好看，如果有量但很少，至少給 5% 高度
-            if (currentMl > 0 && percent < 5) percent = 5;
 
             // 5. 更新 DOM
            const liquidEl = document.getElementById('milk-liquid');
@@ -5897,9 +5906,36 @@ window.toggleActorTypeLabel = function() {
             if (totalEl) totalEl.textContent = totalMl; // 顯示生涯總產量
             if (badgeEl) badgeEl.textContent = `已收集 ${cups} 杯`;
 
-            // 數據頁面的欄位也順便更新
-            const statCupsEl = document.getElementById('stat-milk-cups');
-            if (statCupsEl) statCupsEl.textContent = cups;
+            // ================= 數據頁邏輯 (新版：智慧進位) =================
+    
+            const volEl = document.getElementById('stat-milk-volume');
+            const unitEl = document.getElementById('stat-milk-unit');
+            const equivEl = document.getElementById('stat-milk-equivalent');
+
+            if (volEl && unitEl && equivEl) {
+                if (totalMl < 1000) {
+                    // A. 未滿 1 公升：顯示 ml
+                    volEl.textContent = totalMl;
+                    unitEl.textContent = 'ml';
+                    equivEl.textContent = `再接再厲！還差 ${1000 - totalMl}ml 滿一公升`;
+                } else {
+                    // B. 超過 1 公升：顯示 L (保留兩位小數)
+                    const liters = (totalMl / 1000).toFixed(2); // 例如 1.25
+                    volEl.textContent = liters;
+                    unitEl.textContent = 'L (公升)';
+            
+                    // 趣味換算：以 1公升裝的家庭號牛奶為例
+                    // Math.floor(liters) 取整數瓶
+                    equivEl.textContent = `相當於 ${Math.floor(liters)} 瓶家庭號鮮乳 🐄`;
+                }
+        
+                // 特殊字體顏色：如果超過 10 公升，把數字變金色 (彩蛋)
+                if (totalMl >= 10000) {
+                    volEl.style.color = 'var(--color-gold)';
+                } else {
+                    volEl.style.color = 'var(--color-primary)';
+                }
+            }
         };
 
     </script>
