@@ -4598,7 +4598,7 @@ window.toggleActorTypeLabel = function() {
                 const avatarUrl = actor.avatar || DEFAULT_AVATAR;
                 
                 // 名字前加圖示 (資料夾 vs 演員)
-                const nameIcon = actor.isCollection ? '📂 ' : ''; 
+                const nameIcon = actor.isCollection ? '' : ''; 
                 
                 // 計算影片數
                 const vidCount = actor.videos ? actor.videos.length : 0;
@@ -4606,7 +4606,7 @@ window.toggleActorTypeLabel = function() {
                 div.innerHTML = `
                     <div class="avatar-container">
                         <img src="${avatarUrl}" class="actor-avatar" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
-                        ${actor.isCollection ? '<div class="collection-badge">SET</div>' : ''}
+                        ${actor.isCollection ? '<div class="collection-badge">📂</div>' : ''}
                     </div>
                     <div class="actor-name">${nameIcon}${actor.name}</div>
                     <div class="actor-count" style="font-size:11px; color:#999;">${vidCount} 部影片</div>
