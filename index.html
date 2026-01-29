@@ -4513,7 +4513,7 @@ window.toggleActorTypeLabel = function() {
                 const avatarUrl = actor.avatar || DEFAULT_AVATAR;
                 
                 // 名字前加圖示 (資料夾 vs 演員)
-                const nameIcon = actor.isCollection ? '📂 ' : ''; 
+                const nameIcon = '';
                 
                 // 計算影片數
                 const vidCount = actor.videos ? actor.videos.length : 0;
@@ -4521,9 +4521,9 @@ window.toggleActorTypeLabel = function() {
                 div.innerHTML = `
                     <div class="avatar-container">
                         <img src="${avatarUrl}" class="actor-avatar" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
-                        ${actor.isCollection ? '<div class="collection-badge">SET</div>' : ''}
+                        ${actor.isCollection ? '<div class="collection-badge">📂</div>' : ''}
                     </div>
-                    <div class="actor-name">${nameIcon}${actor.name}</div>
+                    <div class="actor-name">${actor.name}</div>
                     <div class="actor-count" style="font-size:11px; color:#999;">${vidCount} 部影片</div>
                 `;
                 container.appendChild(div);
@@ -6074,62 +6074,56 @@ window.toggleActorTypeLabel = function() {
         }
 
         /* 2. 針對「合輯 (Collection)」的特殊樣式 */
-        
-        /* 變形：改成圓角矩形 (原本是 50% 圓形) */
+
+        /* 修正頭像：改為單純圓角方形，移除堆疊陰影 */
         .actor-card.is-collection .actor-avatar {
-            border-radius: 12px !important;  /* 圓角 */
+            border-radius: 20px !important;  /* 圓角 */
             aspect-ratio: 1 / 1 !important;  /* 正方形 */
-            width: 85% !important;           /* 稍微縮小一點，留空間給陰影 */
-            border: 3px solid #fff !important; /* 白邊框，像拍立得 */
-            
-            /* ✨ 堆疊特效：用陰影模擬後面還有一張卡片 */
-            box-shadow: 
-                4px -4px 0 -1px rgba(0,0,0,0.1), /* 第一層陰影 */
-                8px -8px 0 -2px rgba(0,0,0,0.05) /* 第二層陰影 */
-                !important;
-                
-            transform: translate(-4px, 4px); /* 為了視覺平衡，稍微往左下移 */
-            transition: transform 0.2s;
-        }
-        
-        /* 按下去的微互動 */
-        .actor-card.is-collection:active .actor-avatar {
-            transform: translate(0, 0) scale(0.95);
-            box-shadow: none !important;
+            width: 100% !important;          /* 寬度跟圓形的一樣滿 */
+            border: 2px solid white !important; /* 保持白邊框 */
+    
+            /* 改用單純的陰影，移除原本的堆疊特效 */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+    
+            /* 移除位移，確保對齊 */
+            transform: none !important; 
+            object-fit: cover !important;
         }
 
-        /* 3. 合輯右上角的小標籤 (SET) */
+        /* 按下去的微互動 (維持縮放即可) */
+        .actor-card.is-collection:active .actor-avatar {
+            transform: scale(0.95) !important;
+        }
+
+        /* 修正標題文字：移除粗體與特殊顏色，讓它跟一般演員一樣 */
+        .actor-card.is-collection .actor-name {
+            color: #333;             /* 改回一般黑色 */
+            font-weight: 600 !important; /* 改回一般粗度 (原本是 800) */
+            margin-top: 2px;
+        }
+
+        /* 3. 合輯左下角的資料夾圖示 (取代原本的 SET) */
         .collection-badge {
             position: absolute;
-            bottom: 0px;
-            right: 5px;
-            background: rgba(0,0,0,0.7);
-            color: #fff;
-            font-size: 10px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 4px;
-            backdrop-filter: blur(2px);
+            bottom: 2px;    /* 靠下 */
+            left: 2px;      /* 🔴 改為靠左 */
+            right: auto;    /* 取消靠右 */
+    
+            background: rgba(255, 255, 255, 0.9); /* 給一點白色背景讓圖示清楚 */
+            font-size: 14px;
+            padding: 2px 5px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 5;
             pointer-events: none;
         }
 
-        /* 4. 合輯的名字顏色微調 (讓它更像標題) */
-        .actor-card.is-collection .actor-name {
-            color: #555;
-            font-weight: 800 !important;
-        }
-
         /* 🌙 深色模式適配 */
-        body.dark-mode .actor-card.is-collection .actor-avatar {
-            border-color: #333 !important; /* 深色邊框 */
-            box-shadow: 
-                4px -4px 0 -1px rgba(255,255,255,0.1), 
-                8px -8px 0 -2px rgba(255,255,255,0.05) 
-                !important;
-        }
         body.dark-mode .actor-card.is-collection .actor-name {
-            color: #ddd;
+            color: #fff; /* 深色模式文字改白 */
+        }
+        body.dark-mode .collection-badge {
+            background: rgba(50, 50, 50, 0.9); /* 深色模式下圖示背景變深 */
         }
     </style>
 </body>
