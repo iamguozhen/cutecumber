@@ -4400,23 +4400,23 @@ window.toggleActorTypeLabel = function() {
     
             const term = keyword.toLowerCase();
 
-    const filtered = COUNTRY_LIST.filter(c => 
-        c.n.includes(term) || c.c.toLowerCase().includes(term)
-    );
+            const filtered = COUNTRY_LIST.filter(c => 
+                c.n.includes(term) || c.c.toLowerCase().includes(term)
+            );
 
-    filtered.forEach(country => {
-        const item = document.createElement('div');
-        item.className = 'suggestion-item';
-        item.style.padding = '15px';
-        item.style.borderBottom = '1px solid var(--color-border)';
-        item.innerHTML = `
-            <span style="font-size:20px; margin-right:12px;">${country.f}</span>
-            <span style="font-size:16px;">${country.n}</span>
-        `;
-        item.onclick = () => selectNation(country);
-        container.appendChild(item);
-    });
-};
+            filtered.forEach(country => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.style.padding = '15px';
+                item.style.borderBottom = '1px solid var(--color-border)';
+                item.innerHTML = `
+                    <span style="font-size:20px; margin-right:12px;">${country.f}</span>
+                    <span style="font-size:16px;">${country.n}</span>
+                `;
+                item.onclick = () => selectNation(country);
+                container.appendChild(item);
+            });
+        };
         window.showDriverList = function() {
             document.getElementById('driver-view-list').classList.add('active');
             document.getElementById('driver-view-detail').classList.remove('active');
@@ -4432,77 +4432,186 @@ window.toggleActorTypeLabel = function() {
             document.getElementById('app-container').scrollTo(0, 0);
         };
 
-        window.renderActorList = function() {
-            const c = document.getElementById('actor-grid');
-            c.innerHTML = '';
-            
-            // Search Logic
-            const searchInput = document.getElementById('driver-search-input');
-            const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            // 統一的篩選入口 (搜尋框輸入 或 排序改變時 呼叫)
+        // 統一的篩選入口 (搜尋框輸入 或 排序改變時 呼叫)
+        // 🔥 補回這個遺失的關鍵函式！
         window.filterDriverList = function() {
             const btns = document.querySelectorAll('.driver-header .toggle-btn');
             // 檢查現在是哪個模式亮起 (Active)
-            const isActorMode = btns[0].classList.contains('active');
+            const isActorMode = btns[0] && btns[0].classList.contains('active');
             
             if (isActorMode) {
-                renderActorList(); // 呼叫雲端情人渲染 (內部會去讀取搜尋框)
+                renderActorList(); // 呼叫雲端情人渲染
             } else {
-                renderPartnerGrid(); // 呼叫性夥伴渲染 (內部會去讀取搜尋框)
+                renderPartnerGrid(); // 呼叫性夥伴渲染
             }
         };
-            // Sort Logic
-            const sortType = document.getElementById('driver-sort-select') ? document.getElementById('driver-sort-select').value : 'updated';
-            
-            actorProfiles.sort((a, b) => {
-                if (sortType === 'name') {
-                    return a.name.localeCompare(b.name, 'zh-Hant');
-                } else if (sortType === 'count') {
-                    return (b.videos ? b.videos.length : 0) - (a.videos ? a.videos.length : 0);
-                } else {
-                    // Default: updated
-                    const timeA = a.lastUpdated || a.id;
-                    const timeB = b.lastUpdated || b.id;
-                    return timeB - timeA;
-                }
-            });
-            
-            // Save sorted order so it persists
-            saveActorData();
 
-            let filtered = actorProfiles;
-            if (term) {
-                filtered = actorProfiles.filter(a => {
-                    const nameMatch = (a.name || '').toLowerCase().includes(term);
-                    const bioMatch = (a.bio || '').toLowerCase().includes(term);
-                    // 搜尋人物 tags
-                    const actorTagMatch = (a.tags || []).some(t => t.toLowerCase().includes(term));
-                    // 新增：Deep Search - 搜尋人物底下的「影片標題」或「影片標籤」
-                    const videoMatch = (a.videos || []).some(v => 
-                        (v.title && v.title.toLowerCase().includes(term)) ||
-                        (v.tags && v.tags.some(vt => vt.toLowerCase().includes(term)))
-                    );
+        // 渲染演員列表 (含合輯樣式區分) - 最終修正版
+        window.renderActorList = function() {
+            // 🔴 確認使用正確的 ID: 'actor-grid'
+            const container = document.getElementById('actor-grid');
+            if (!container) return; 
+            container.innerHTML = '';
 
-                    return nameMatch || bioMatch || actorTagMatch || videoMatch;
+            // 1. 取得排序設定
+            const sortSelect = document.getElementById('driver-sort-select'); 
+            const sortMode = sortSelect ? sortSelect.value : 'updated';
+            
+            // 2. 複製陣列並排序
+            let list = [...actorProfiles];
+            
+            // 搜尋過濾
+            const searchInput = document.getElementById('driver-search-input');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            if(searchTerm) {
+                list = list.filter(a => {
+                    const nameMatch = (a.name || '').toLowerCase().includes(searchTerm);
+                    const bioMatch = (a.bio || '').toLowerCase().includes(searchTerm);
+                    const tagMatch = (a.tags && a.tags.some(t => t.toLowerCase().includes(searchTerm)));
+                    // 深度搜尋：影片標題
+                    const videoMatch = (a.videos || []).some(v => v.title.toLowerCase().includes(searchTerm));
+                    
+                    return nameMatch || bioMatch || tagMatch || videoMatch;
                 });
             }
 
-            if (filtered.length === 0) {
-                 if (actorProfiles.length === 0) {
-                     c.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#999;padding:40px;">無人物資料</div>';
-                 } else {
-                     c.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#999;padding:40px;">找不到相關的人物 😯</div>';
-                 }
-                return;
+            // 排序邏輯
+            if (sortMode === 'updated') {
+                list.sort((a,b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
+            } else if (sortMode === 'name') {
+                list.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
+            } else if (sortMode === 'count') {
+                list.sort((a,b) => (b.videos ? b.videos.length : 0) - (a.videos ? a.videos.length : 0));
+            } else if (sortMode === 'custom') {
+                list.sort((a,b) => {
+                    const orderA = (a.tierOrder !== undefined) ? a.tierOrder : 99999;
+                    const orderB = (b.tierOrder !== undefined) ? b.tierOrder : 99999;
+                    return orderA - orderB;
+                });
             }
 
-            filtered.forEach(a => {
-                const d = document.createElement('div');
-                d.className = 'actor-card';
-                d.onclick = () => showDriverDetail(a.id);
-                const s = a.avatar || DEFAULT_AVATAR;
-                d.innerHTML = `<img src="${s}" class="actor-avatar" onerror="this.src='${DEFAULT_AVATAR}'"><span class="actor-name">${a.name}</span>`;
-                c.appendChild(d);
+            // 3. 渲染 HTML
+            if (list.length === 0) {
+                 container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#999;padding:40px;">找不到相關資料 🐢</div>';
+                 return;
+            }
+
+            list.forEach(actor => {
+                const div = document.createElement('div');
+                
+                // 加入 'is-collection' 類別以便 CSS 做圓角與堆疊效果
+                div.className = `actor-card ${actor.isCollection ? 'is-collection' : ''}`;
+                
+                // 為了拖曳排序功能
+                div.dataset.id = actor.id;
+                
+                // 點擊事件：開啟詳情
+                div.onclick = () => showDriverDetail(actor.id);
+                
+                // 圖片處理
+                const avatarUrl = actor.avatar || DEFAULT_AVATAR;
+                
+                // 名字前加圖示 (資料夾 vs 演員)
+                const nameIcon = actor.isCollection ? '📂 ' : ''; 
+                
+                // 計算影片數
+                const vidCount = actor.videos ? actor.videos.length : 0;
+
+                div.innerHTML = `
+                    <div class="avatar-container">
+                        <img src="${avatarUrl}" class="actor-avatar" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
+                        ${actor.isCollection ? '<div class="collection-badge">SET</div>' : ''}
+                    </div>
+                    <div class="actor-name">${nameIcon}${actor.name}</div>
+                    <div class="actor-count" style="font-size:11px; color:#999;">${vidCount} 部影片</div>
+                `;
+                container.appendChild(div);
+            });
+        };
+        
+        // 渲染演員列表 (含合輯樣式區分) - 修復版
+        window.renderActorList = function() {
+            // 🔴 修正點：這裡改成正確的 'actor-grid'
+            const container = document.getElementById('actor-grid');
+            
+            if (!container) return; 
+            container.innerHTML = '';
+
+            // 1. 取得排序設定
+            const sortSelect = document.getElementById('driver-sort-select'); // 這裡也確認用正確的 ID
+            const sortMode = sortSelect ? sortSelect.value : 'updated';
+            
+            // 2. 複製陣列並排序
+            let list = [...actorProfiles];
+            
+            // 搜尋過濾
+            const searchInput = document.getElementById('driver-search-input');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            if(searchTerm) {
+                list = list.filter(a => {
+                    const nameMatch = (a.name || '').toLowerCase().includes(searchTerm);
+                    const bioMatch = (a.bio || '').toLowerCase().includes(searchTerm);
+                    const tagMatch = (a.tags && a.tags.some(t => t.toLowerCase().includes(searchTerm)));
+                    // 深度搜尋：影片標題
+                    const videoMatch = (a.videos || []).some(v => v.title.toLowerCase().includes(searchTerm));
+                    
+                    return nameMatch || bioMatch || tagMatch || videoMatch;
+                });
+            }
+
+            // 排序邏輯
+            if (sortMode === 'updated') {
+                list.sort((a,b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
+            } else if (sortMode === 'name') {
+                list.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
+            } else if (sortMode === 'count') {
+                list.sort((a,b) => (b.videos ? b.videos.length : 0) - (a.videos ? a.videos.length : 0));
+            } else if (sortMode === 'custom') {
+                // 如果有自訂排序功能
+                list.sort((a,b) => {
+                    const orderA = (a.tierOrder !== undefined) ? a.tierOrder : 99999;
+                    const orderB = (b.tierOrder !== undefined) ? b.tierOrder : 99999;
+                    return orderA - orderB;
+                });
+            }
+
+            // 3. 渲染 HTML
+            if (list.length === 0) {
+                 container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#999;padding:40px;">找不到相關資料 🐢</div>';
+                 return;
+            }
+
+            list.forEach(actor => {
+                const div = document.createElement('div');
+                
+                // 加入 'is-collection' 類別以便 CSS 做圓角與堆疊效果
+                div.className = `actor-card ${actor.isCollection ? 'is-collection' : ''}`;
+                
+                // 為了拖曳排序功能 (如果有用到)
+                div.dataset.id = actor.id;
+                
+                div.onclick = () => showDriverDetail(actor.id); // 注意：原本是 openActorDetail，這裡改回 showDriverDetail 以配合您的系統
+                
+                // 圖片處理
+                const avatarUrl = actor.avatar || DEFAULT_AVATAR;
+                
+                // 名字前加圖示 (資料夾 vs 演員)
+                const nameIcon = actor.isCollection ? '📂 ' : ''; 
+                
+                // 計算影片數
+                const vidCount = actor.videos ? actor.videos.length : 0;
+
+                div.innerHTML = `
+                    <div class="avatar-container">
+                        <img src="${avatarUrl}" class="actor-avatar" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
+                        ${actor.isCollection ? '<div class="collection-badge">SET</div>' : ''}
+                    </div>
+                    <div class="actor-name">${nameIcon}${actor.name}</div>
+                    <div class="actor-count" style="font-size:11px; color:#999;">${vidCount} 部影片</div>
+                `;
+                container.appendChild(div);
             });
         };
 
@@ -5952,7 +6061,76 @@ window.toggleActorTypeLabel = function() {
                 }
             }
         };
+    </script> <style>   
+        /* === 合輯 vs 真人 頭像區分樣式 === */
 
-    </script>
+        /* 1. 基礎設定：這是圖片容器，用來做特效定位 */
+        .avatar-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 6px;
+        }
+
+        /* 2. 針對「合輯 (Collection)」的特殊樣式 */
+        
+        /* 變形：改成圓角矩形 (原本是 50% 圓形) */
+        .actor-card.is-collection .actor-avatar {
+            border-radius: 12px !important;  /* 圓角 */
+            aspect-ratio: 1 / 1 !important;  /* 正方形 */
+            width: 85% !important;           /* 稍微縮小一點，留空間給陰影 */
+            border: 3px solid #fff !important; /* 白邊框，像拍立得 */
+            
+            /* ✨ 堆疊特效：用陰影模擬後面還有一張卡片 */
+            box-shadow: 
+                4px -4px 0 -1px rgba(0,0,0,0.1), /* 第一層陰影 */
+                8px -8px 0 -2px rgba(0,0,0,0.05) /* 第二層陰影 */
+                !important;
+                
+            transform: translate(-4px, 4px); /* 為了視覺平衡，稍微往左下移 */
+            transition: transform 0.2s;
+        }
+        
+        /* 按下去的微互動 */
+        .actor-card.is-collection:active .actor-avatar {
+            transform: translate(0, 0) scale(0.95);
+            box-shadow: none !important;
+        }
+
+        /* 3. 合輯右上角的小標籤 (SET) */
+        .collection-badge {
+            position: absolute;
+            bottom: 0px;
+            right: 5px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            backdrop-filter: blur(2px);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* 4. 合輯的名字顏色微調 (讓它更像標題) */
+        .actor-card.is-collection .actor-name {
+            color: #555;
+            font-weight: 800 !important;
+        }
+
+        /* 🌙 深色模式適配 */
+        body.dark-mode .actor-card.is-collection .actor-avatar {
+            border-color: #333 !important; /* 深色邊框 */
+            box-shadow: 
+                4px -4px 0 -1px rgba(255,255,255,0.1), 
+                8px -8px 0 -2px rgba(255,255,255,0.05) 
+                !important;
+        }
+        body.dark-mode .actor-card.is-collection .actor-name {
+            color: #ddd;
+        }
+    </style>
 </body>
 </html>
