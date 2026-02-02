@@ -2880,11 +2880,14 @@ window.checkStorageUsage = function() {
     
     showAlert(msg);
 };
-        // --- Achievements Logic (V5：新年特赦 + 自動回收機制) ---
+        // --- Achievements Logic (V5：新年特赦 + 自動回收機制 + 修復產量變數錯誤) ---
         function checkAchievements(onFinished) {
             const sorted = [...ejaculationRecords].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
             const count = sorted.length;
             
+            // 🔥 修復點 1：補上這行計算總產量的變數定義
+            const totalVolume = count * 3; 
+
             const masturbationRecords = sorted.filter(r => r.type === '自慰');
             const masturbationCount = masturbationRecords.length;
             const masturbationDates = masturbationRecords.map(r=>{const d=new Date(r.timestamp);return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;});
@@ -2914,7 +2917,7 @@ window.checkStorageUsage = function() {
             }
             const uniqueNationCount = uniqueNations.size;
             
-            // --- 禁慾計算 (V5：新年特赦版 - 與數據頁邏輯同步) ---
+            // --- 禁慾計算 (V5：新年特赦版) ---
             let maxAbs = 0;
             const DAY_MS = 86400000;
             if(sorted.length > 0){
@@ -2926,7 +2929,6 @@ window.checkStorageUsage = function() {
                     const olderYear = new Date(older.timestamp).getFullYear();
                     const isOlderBackfill = Math.abs(older.id - new Date(older.timestamp).getTime()) > DAY_MS;
 
-                    // 邏輯：2026 開始全面信任，2025 以前嚴格封殺補登
                     if (olderYear >= 2026) {
                         if(gapDays > maxAbs) maxAbs = gapDays;
                     } else {
@@ -2936,7 +2938,6 @@ window.checkStorageUsage = function() {
                     }
                 }
                 
-                // 最後一次到現在
                 const lastRec = sorted[sorted.length-1];
                 const lastYear = new Date(lastRec.timestamp).getFullYear();
                 const isLastBackfill = Math.abs(lastRec.id - new Date(lastRec.timestamp).getTime()) > DAY_MS;
@@ -2950,7 +2951,6 @@ window.checkStorageUsage = function() {
                     }
                 }
             }
-            // ------------------------------------
 
             // --- 縱慾連擊計算 ---
             let maxStreak = 0;
@@ -2969,56 +2969,55 @@ window.checkStorageUsage = function() {
                 }
             }
 
-            // ==========================================
-            // 🔥 關鍵修正：成就回收機制 (Auto-Relock) 🔥
-            // ==========================================
+            // 成就回收機制
             const originalLength = unlockedAchievements.length;
             unlockedAchievements = unlockedAchievements.filter(u => {
                 const achData = ACHIEVEMENTS_DATA.find(a => a.id === u.id);
-                if (!achData) return true; // 未知成就保留
-
-                // 檢查【苦行僧模式 (Category C)】
-                // 如果目前的最長禁慾天數 (maxAbs) 已經不達標了，就無情移除！
+                if (!achData) return true; 
                 if (achData.type === 'abs') {
                     return maxAbs >= achData.thres;
                 }
-                return true; // 其他類型暫不回收
+                return true; 
             });
 
-            // 如果有成就被回收，儲存變更並刷新介面
             if (unlockedAchievements.length !== originalLength) {
                 saveAchData();
                 if(document.getElementById('stats-view-achievements').style.display === 'block') {
-                    renderAchievements(); // 強制刷新列表顯示上鎖狀態
+                    renderAchievements(); 
                 }
             }
-            // ==========================================
 
             let newUnlock = false;
             const unlockedIDs = unlockedAchievements.map(u => u.id); 
             let firstUnlockAch = null;
 
-            // 這裡記得加入 'E' 和 'F' 類別
-            // --- 🟢 修改：加入 'F' ---
             const categories = ['A', 'B', 'C', 'D', 'E', 'F']; 
-            // -----------------------
 
             ACHIEVEMENTS_DATA.forEach(ach => {
                 if(unlockedIDs.includes(ach.id)) return; 
                 let pass = false;
                 
-                if(ach.type==='count') { /* ... */ }
+                if(ach.type==='count' && count >= ach.thres) pass = true; // 補回 count 判斷
                 if(ach.type==='abs' && maxAbs>=ach.thres) pass=true;
                 if(ach.type==='streak' && maxStreak >= ach.thres) pass = true;
-                if(ach.type==='special') { /* ... */ }
+                if(ach.type==='special') { 
+                    if(ach.isBday && bday){
+                         const today = new Date();
+                         const todayStr = `${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+                         if(masturbationDates.includes(bday)) pass = true;
+                    }
+                    if(ach.date && masturbationDates.includes(ach.date)) pass = true;
+                    if(ach.dates){
+                         if(ach.dates.some(d => masturbationDates.includes(d))) pass = true;
+                    }
+                }
                 if(ach.type==='sex_count' && sexCount >= ach.thres) pass = true;
                 if(ach.type==='sex_same_partner' && maxSamePartnerCount >= ach.thres) pass = true;
                 if(ach.type==='sex_unique_partners' && uniquePartners.size >= ach.thres) pass = true;
                 if(ach.type==='sex_unique_nations' && uniqueNationCount >= ach.thres) pass = true;
 
-                // --- 🟢 新增：產量成就判斷邏輯 ---
+                // 🔥 修復點 2：這裡之前會報錯，現在有了 totalVolume 就正常了
                 if(ach.type==='volume' && totalVolume >= ach.thres) pass = true;
-                // -----------------------------
 
                 if(pass) {
                     const todayStr = new Date().toLocaleDateString();
@@ -3287,14 +3286,21 @@ window.checkStorageUsage = function() {
                 }
                 document.getElementById('home-message').textContent = getHomeMessage();
             }
+            
+            // 🔥 修復點：本月戰績計算修正 (加入年份判斷)
             const n = new Date();
-            document.getElementById('month-count-display').textContent = ejaculationRecords.filter(r => new Date(r.timestamp).getMonth() === n.getMonth()).length;
+            const currentMonthCount = ejaculationRecords.filter(r => {
+                const rDate = new Date(r.timestamp);
+                // 必須同時符合「同一年」且「同一月」
+                return rDate.getMonth() === n.getMonth() && rDate.getFullYear() === n.getFullYear();
+            }).length;
+            document.getElementById('month-count-display').textContent = currentMonthCount;
+
             const rc = document.getElementById('recent-list-container'), rs = [...ejaculationRecords].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 3);
             rc.innerHTML = rs.length ? '' : '<div style="text-align:center;padding:20px;color:#ccc;">暫無紀錄</div>';
             
             const typeEmoji = { '自慰': '🍆', '做愛': '🍑', '夢遺': '💤' };
-            const weekdays = ['週日','週一','週二','週三','週四','週五','週六'];
-
+            // (以下省略 recent-list 渲染邏輯，保持原樣即可)
             rs.forEach(r => {
                 const dateObj = new Date(r.timestamp);
                 const md = `${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getDate().toString().padStart(2, '0')}`;
@@ -3308,17 +3314,15 @@ window.checkStorageUsage = function() {
                 rc.appendChild(div);
             });
             
-            // --- 修正後的「目前連擊」計算邏輯 (V2) ---
-            // 1. 直接切字串拿日期 (YYYY-MM-DD)，避免時區轉換誤差
+            // 連擊計算邏輯保持不變
             const uniqueDates = [...new Set(ejaculationRecords.map(r => r.timestamp.split('T')[0]))]
-                .sort((a, b) => b.localeCompare(a)); // 降序：新 -> 舊
+                .sort((a, b) => b.localeCompare(a));
 
             let currentStreak = 0;
 
             if (uniqueDates.length > 0) {
-                // 取得「使用者當地」的今天與昨天日期字串
                 const now = new Date();
-                const offset = now.getTimezoneOffset() * 60000; // 分鐘轉毫秒
+                const offset = now.getTimezoneOffset() * 60000;
                 const localNow = new Date(now.getTime() - offset);
                 
                 const todayStr = localNow.toISOString().split('T')[0];
@@ -3327,23 +3331,15 @@ window.checkStorageUsage = function() {
                 
                 const latestDate = uniqueDates[0];
 
-                // 只有當最新紀錄是「今天」或「昨天」時，才視為連擊有效
                 if (latestDate === todayStr || latestDate === yesterdayStr) {
-                    currentStreak = 1; // 至少有 1 天
-                    
+                    currentStreak = 1;
                     for (let i = 0; i < uniqueDates.length - 1; i++) {
-                        const d1 = new Date(uniqueDates[i]);     // 較新
-                        const d2 = new Date(uniqueDates[i+1]);   // 較舊 (前一筆)
-                        
-                        // 計算天數差
+                        const d1 = new Date(uniqueDates[i]);
+                        const d2 = new Date(uniqueDates[i+1]);
                         const diffTime = Math.abs(d1 - d2);
                         const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-                        if (diffDays === 1) {
-                            currentStreak++;
-                        } else {
-                            break; // 中斷
-                        }
+                        if (diffDays === 1) currentStreak++;
+                        else break;
                     }
                 }
             }
