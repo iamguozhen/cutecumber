@@ -192,83 +192,98 @@
         .recent-meta { font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
         .recent-location { background: #f0f0f0; color: #666; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; max-width: 80px; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
          
-        /* === 天使與惡魔互動區 === */
-        .duo-stage {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            padding: 10px 20px; margin-bottom: 20px; height: 140px;
-            background: transparent; position: relative;
-        }
-        .vs-icon {
-            font-size: 20px; font-weight: 900; color: #ddd; opacity: 0.5;
-            margin-bottom: 20px; font-style: italic;
-        }
-        
-        .character {
-            display: flex; flex-direction: column; align-items: center;
-            width: 45%; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            opacity: 0.5; transform: scale(0.9); filter: grayscale(0.8);
-            cursor: pointer; position: relative;
-        }
-        .avatar-wrapper { position: relative; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
-        .avatar { font-size: 50px; z-index: 2; transition: transform 0.2s; }
-        .character:active .avatar { transform: scale(0.9); }
-        .char-name { font-size: 12px; font-weight: bold; margin-top: 5px; color: #999; }
-
-        /* 對話框 */
-        .bubble {
-            background: #fff; border-radius: 12px; padding: 8px 10px;
-            font-size: 12px; color: #333; margin-bottom: 8px;
-            position: absolute; bottom: 85px; width: 140px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #eee;
-            opacity: 0; transform: translateY(10px) scale(0.8);
-            transition: all 0.3s ease; pointer-events: none; z-index: 20;
-            text-align: center; line-height: 1.4;
-        }
-        .bubble::after {
-            content: ''; position: absolute; bottom: -6px; left: 50%; margin-left: -6px;
-            width: 0; height: 0; border-left: 6px solid transparent;
-            border-right: 6px solid transparent; border-top: 6px solid #fff;
+        /* === 白色房間與男子宿舍 === */
+        .white-room-container {
+            width: 100%;
+            aspect-ratio: 1 / 1; /* 正方形 */
+            background-color: #f0f0f0;
+            border-radius: 20px;
+           box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--color-border);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* 活躍狀態 (獲勝者) */
-        .character.winning {
-            opacity: 1; transform: scale(1.1); filter: grayscale(0);
-        }
-        .character.winning .bubble {
-            opacity: 1; transform: translateY(0) scale(1);
-        }
-        .character.winning .avatar {
-            animation: bounceChar 2s infinite;
+        .roommate-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.5s ease-in-out;
         }
 
-        /* 天使特效 */
-        #char-angel.winning .halo {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            width: 40px; height: 10px; border-radius: 50%;
-            border: 2px solid gold; box-shadow: 0 0 10px gold;
-            animation: floatHalo 2s infinite ease-in-out;
+        .btn-dorm {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 10;
+           transition: transform 0.1s;
         }
-        #char-angel .bubble { border: 1px solid #76C846; color: #2e7d32; }
+        .btn-dorm:active { transform: scale(0.95); }
 
-        /* 惡魔特效 */
-        #char-demon.winning .fire {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(255,0,0,0.4) 0%, rgba(0,0,0,0) 70%);
-            animation: pulseFire 1s infinite; z-index: 1; border-radius: 50%;
+        .roommate-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+           letter-spacing: 1px;
         }
-        #char-demon .bubble { border: 1px solid #FF4757; color: #c0392b; }
+        .roommate-status.post-nut {
+            background: rgba(255, 105, 180, 0.8); /* 高潮狀態變粉紅色 */
+            box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+        }
 
-        /* 點擊時強制說話樣式 */
-        .character.talking .bubble { opacity: 1 !important; transform: translateY(0) scale(1) !important; z-index: 30; }
+        /* 宿舍成員卡片 */
+        .dorm-card {
+            background: var(--color-card-bg);
+            border: 2px solid var(--color-border);
+            border-radius: 16px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dorm-card.active {
+            border-color: var(--color-primary);
+            background: rgba(118, 200, 70, 0.05);
+           box-shadow: 0 4px 12px rgba(118, 200, 70, 0.15);
+        }
+        .dorm-card img {
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border: 2px solid #eee;
+        }
+        .dorm-card .name { font-weight: 800; font-size: 16px; margin-bottom: 4px; color: var(--color-text);}
+        .dorm-card .desc { font-size: 12px; color: #888; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        @keyframes bounceChar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        @keyframes floatHalo { 0%, 100% { top: -10px; opacity: 0.5; } 50% { top: -15px; opacity: 1; } }
-        @keyframes pulseFire { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(0.8); opacity: 0.5; } }
-        
-        /* Dark Mode */
-        body.dark-mode .bubble { background: #333; color: #fff; border-color: #444 !important; }
-        body.dark-mode .bubble::after { border-top-color: #333; }
-        body.dark-mode .vs-icon { color: #444; }
+        /* 深色模式適配 */
+        body.dark-mode .white-room-container { background-color: #1e1e1e; border-color: #333; }
+        body.dark-mode .btn-dorm { background: rgba(30,30,30,0.85); color: #fff; border-color: #555; }
+        body.dark-mode .dorm-card { border-color: #333; }
 
         /* --- Stats Layout --- */
         .stats-toggle-container { margin-bottom: 20px; position: sticky; top: 0; z-index: 90; }
@@ -1183,26 +1198,10 @@ body.dark-mode .calendar-day.today {
                 <!-- Dynamic Message -->
                 <div id="home-message">CuteCumber 隨時待命。</div>
             </div>
-            <div id="duo-stage" class="duo-stage">
-                <div id="char-angel" class="character" onclick="tapMascot('angel')">
-                    <div class="bubble" id="angel-msg">...</div>
-                    <div class="avatar-wrapper">
-                        <div class="avatar">😇</div>
-                        <div class="halo"></div>
-                    </div>
-                    <div class="char-name">小天使</div>
-                </div>
-
-                <div class="vs-icon">VS</div>
-
-                <div id="char-demon" class="character" onclick="tapMascot('demon')">
-                    <div class="bubble" id="demon-msg">...</div>
-                    <div class="avatar-wrapper">
-                        <div class="avatar">😈</div>
-                        <div class="fire"></div>
-                    </div>
-                    <div class="char-name">小惡魔</div>
-                </div>
+            <div id="white-room-container" class="white-room-container">
+                <img id="roommate-img" class="roommate-img" src="" alt="Roommate" onclick="clickRoommate()" style="cursor: pointer;">
+                <div class="roommate-status" id="roommate-status">日常</div>
+                <button class="btn-dorm" onclick="openDormModal()">🚪 男子宿舍</button>
             </div>
             <div id="milk-component" class="milk-section">
                  <div class="milk-badge" id="milk-cups-badge">已收集 0 杯</div>
@@ -1563,6 +1562,18 @@ body.dark-mode .calendar-day.today {
             <h3 class="system-modal-title" id="sys-title">提示</h3>
             <div class="system-modal-msg" id="sys-msg"></div>
             <div class="system-modal-actions" id="sys-actions"></div>
+        </div>
+    </div>
+
+    <div id="dorm-modal" class="modal-overlay bottom-sheet">
+        <div class="modal-content-bottom">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">男子宿舍</h3>
+                <button class="btn-close" onclick="closeDormModal()">×</button>
+            </div>
+            <p style="font-size:13px; color:#888; margin-top:-5px; margin-bottom:15px;">選擇要邀請到首頁房間的男子：</p>
+            <div id="dorm-list" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                </div>
         </div>
     </div>
 
@@ -2562,6 +2573,7 @@ window.compressImage = function(f) {
 
             // 加入這一行 (確保產乳總量卡片更新)：
             updateMilkGlass();
+            updateRoommateDisplay();
         };
 
         // 優化跳轉邏輯 (解決數據頁點擊無反應)
@@ -2602,6 +2614,246 @@ window.compressImage = function(f) {
                 }
             }, 100);
         };
+
+        // === 男子宿舍資料庫 (使用相對路徑) ===
+        const ROOMMATES = [
+            {
+                id: 'char_01',
+                name: 'Sebastian',
+                desc: '',
+                avatar: './images/roommates/char_01/avatar.PNG', // 宿舍大頭照
+                defaults: [
+                    './images/roommates/char_01/default_1.PNG',
+                    './images/roommates/char_01/default_2.PNG',
+                    './images/roommates/char_01/default_3.PNG',
+                    './images/roommates/char_01/default_4.PNG',
+                    './images/roommates/char_01/default_5.PNG'
+                ],
+                high: './images/roommates/char_01/high_1.JPG',       // 單次高潮
+                doubleHigh: './images/roommates/char_01/high_2.JPG', // 雙重高潮
+                angry: './images/roommates/char_01/angry.PNG'        // 生悶氣
+           },
+           {
+                id: 'char_02',
+                name: 'Andrew',
+                desc: '',
+                avatar: './images/roommates/char_02/avatar.PNG', // 宿舍大頭照
+                defaults: [
+                    './images/roommates/char_02/default_1.PNG',
+                    './images/roommates/char_02/default_2.PNG',
+                    './images/roommates/char_02/default_3.PNG',
+                    './images/roommates/char_02/default_4.PNG',
+                    './images/roommates/char_02/default_5.PNG'
+                ],
+                high: './images/roommates/char_02/high_1.JPG',       // 單次高潮
+                doubleHigh: './images/roommates/char_02/high_2.JPG', // 雙重高潮
+                angry: './images/roommates/char_02/angry.PNG'        // 生悶氣
+           },
+           {
+                id: 'char_03',
+                name: 'Cameron',
+                desc: '',
+                avatar: './images/roommates/char_03/avatar.PNG', // 宿舍大頭照
+                defaults: [
+                    './images/roommates/char_03/default_1.PNG',
+                    './images/roommates/char_03/default_2.PNG',
+                    './images/roommates/char_03/default_3.PNG',
+                    './images/roommates/char_03/default_4.PNG',
+                    './images/roommates/char_03/default_5.JPG'
+                ],
+                high: './images/roommates/char_03/high_1.JPG',       // 單次高潮
+                doubleHigh: './images/roommates/char_03/high_2.JPG', // 雙重高潮
+                angry: './images/roommates/char_03/angry.JPG'        // 生悶氣
+           },
+           {
+                id: 'char_04',
+                name: 'Josh',
+                desc: '',
+                avatar: './images/roommates/char_04/avatar.PNG', // 宿舍大頭照
+                defaults: [
+                    './images/roommates/char_04/default_1.PNG',
+                    './images/roommates/char_04/default_2.PNG',
+                    './images/roommates/char_04/default_3.PNG',
+                    './images/roommates/char_04/default_4.PNG',
+                    './images/roommates/char_04/default_5.PNG'
+                ],
+                high: './images/roommates/char_04/high_1.JPG',       // 單次高潮
+                doubleHigh: './images/roommates/char_04/high_2.JPG', // 雙重高潮
+                angry: './images/roommates/char_04/angry.PNG'        // 生悶氣
+           },
+           {
+                id: 'char_duo_A',       // A男的獨立ID
+                name: 'David',
+                desc: '',
+                avatar: './images/roommates/char_duo_A/avatar.PNG', // A自己的大頭照
+        
+                // 🏠 房間圖片全部指向 duo_shared (共用資料夾)
+                defaults: [
+                   './images/roommates/duo_shared/default_1.jpg',
+                   './images/roommates/duo_shared/default_2.jpg'
+                ],
+                high: './images/roommates/duo_shared/high_1.jpg',
+                doubleHigh: './images/roommates/duo_shared/high_2.jpg',
+                angry: './images/roommates/duo_shared/angry.jpg'
+               },
+           {
+                id: 'char_duo_B',       // B男的獨立ID
+                name: 'Nicholas',
+                desc: '',
+                avatar: './images/roommates/char_duo_B/avatar.PNG', // B自己的大頭照
+        
+                // 🏠 房間圖片也全部指向 duo_shared (跟A一模一樣)
+                defaults: [
+                   './images/roommates/duo_shared/default_1.jpg',
+                   './images/roommates/duo_shared/default_2.jpg'
+                ],
+                high: './images/roommates/duo_shared/high_1.jpg',
+                doubleHigh: './images/roommates/duo_shared/high_2.jpg',
+                angry: './images/roommates/duo_shared/angry.jpg'
+              },
+            {
+                id: 'char_05',
+                name: 'Bill',
+                desc: '',
+                avatar: './images/roommates/char_05/avatar.PNG', // 宿舍大頭照
+                defaults: [
+                    './images/roommates/char_05/default_1.PNG',
+                    './images/roommates/char_05/default_2.PNG',
+                    './images/roommates/char_05/default_3.PNG',
+                    './images/roommates/char_05/default_4.PNG',
+                    './images/roommates/char_05/default_5.PNG'
+                ],
+                high: './images/roommates/char_05/high_1.JPG',       // 單次高潮
+                doubleHigh: './images/roommates/char_05/high_2.JPG', // 雙重高潮
+                angry: './images/roommates/char_05/angry.PNG'        // 生悶氣
+           },
+           // 你可以繼續往下新增更多角色...
+        ];
+
+        let roommateTimer = null;
+        let currentRoommateState = 'default'; // 紀錄當前狀態，防止亂切換
+
+        function initRoommateSystem() {
+            let selectedId = localStorage.getItem('cuteCumberRoommate');
+            if (!selectedId || !ROOMMATES.find(r => r.id === selectedId)) {
+                selectedId = ROOMMATES[0].id;
+                localStorage.setItem('cuteCumberRoommate', selectedId);
+            }
+            updateRoommateDisplay();
+        }
+        // 核心邏輯：更新房間圖片與狀態
+        window.updateRoommateDisplay = function(isAutoRotate = false) {
+            const selectedId = localStorage.getItem('cuteCumberRoommate') || ROOMMATES[0].id;
+            const char = ROOMMATES.find(r => r.id === selectedId);
+            if (!char) return;
+
+            const imgEl = document.getElementById('roommate-img');
+            const statusEl = document.getElementById('roommate-status');
+            if (!imgEl || !statusEl) return;
+
+            const now = new Date();
+            currentRoommateState = 'default'; // 預設狀態
+            let imgSrc = '';
+            let statusText = '日常';
+            let statusClass = 'roommate-status';
+
+            if (ejaculationRecords.length > 0) {
+                // 抓出最新紀錄
+                const sorted = [...ejaculationRecords].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                const lastTime = new Date(sorted[0].timestamp);
+                
+                // 1. 計算距離上次發射過了几小時
+                const diffHours = (now - lastTime) / (1000 * 60 * 60);
+
+                // 2. 計算「今天」發射了幾次
+                const todayStr = now.toDateString();
+                const todayCount = sorted.filter(r => new Date(r.timestamp).toDateString() === todayStr).length;
+
+                // --- 狀態判定邏輯 ---
+                if (diffHours < 1) {
+                    // 1 小時以內：判斷是單次還是雙重
+                    if (todayCount >= 2) {
+                        currentRoommateState = 'doubleHigh';
+                        imgSrc = char.doubleHigh;
+                        statusText = '💦💦';
+                        statusClass = 'roommate-status post-nut'; // 套用粉紅光暈 CSS
+                    } else {
+                        currentRoommateState = 'high';
+                        imgSrc = char.high;
+                        statusText = '💦';
+                        statusClass = 'roommate-status post-nut';
+                    }
+                } else if (diffHours > 24) {
+                    // 超過 24 小時沒紀錄：生悶氣
+                    currentRoommateState = 'angry';
+                    imgSrc = char.angry;
+                    statusText = '💢';
+                    statusClass = 'roommate-status angry-mode'; // 等等加一個生氣的 CSS
+                }
+            } else {
+                // 如果完全沒有紀錄，當作超過 24 小時處理
+                currentRoommateState = 'angry';
+                imgSrc = char.angry;
+                statusText = '💢';
+                statusClass = 'roommate-status angry-mode';
+            }
+
+            // 如果判定結果是日常狀態，就從陣列中隨機抽一張
+            if (currentRoommateState === 'default') {
+                imgSrc = char.defaults[Math.floor(Math.random() * char.defaults.length)];
+                statusText = '日常';
+                statusClass = 'roommate-status';
+            }
+
+            // 淡出過渡動畫
+            imgEl.style.opacity = 0;
+            setTimeout(() => {
+                // 如果讀不到圖片，給個防呆預設圖
+                imgEl.src = imgSrc || 'https://via.placeholder.com/600/f0f0f0/999999?text=Image+Missing';
+                statusEl.textContent = statusText;
+                statusEl.className = statusClass;
+                imgEl.style.opacity = 1;
+            }, 150);
+        }
+
+        // 點擊圖片的互動功能
+        window.clickRoommate = function() {
+            if (currentRoommateState === 'high' || currentRoommateState === 'doubleHigh') {
+                showAlert("Fuck... I love your cum so much. 😋");
+            } else if (currentRoommateState === 'angry') {
+                showAlert("I need your seed, sir. 🥺");
+            } else {
+                // 日常狀態，點擊強制切換下一張隨機圖
+                if(navigator.vibrate) navigator.vibrate(30);
+                updateRoommateDisplay(true);
+            }
+        }
+
+        // 開啟與關閉宿舍
+        window.openDormModal = function() {
+            const listEl = document.getElementById('dorm-list');
+            const selectedId = localStorage.getItem('cuteCumberRoommate');
+    
+            listEl.innerHTML = ROOMMATES.map(char => `
+                <div class="dorm-card ${char.id === selectedId ? 'active' : ''}" onclick="selectRoommate('${char.id}')">
+                    <img src="${char.avatar}" onerror="this.src='https://via.placeholder.com/150'">
+                    <div class="name">${char.name}</div>
+                    <div class="desc">${char.desc}</div>
+                </div>
+            `).join('');
+    
+            document.getElementById('dorm-modal').classList.add('active');
+        }
+
+        window.closeDormModal = function() { document.getElementById('dorm-modal').classList.remove('active'); }
+
+        window.selectRoommate = function(id) {
+            localStorage.setItem('cuteCumberRoommate', id);
+            updateRoommateDisplay();
+            closeDormModal();
+            if(navigator.vibrate) navigator.vibrate(50);
+             showAlert("切換成功！");}
+        
         // --- 1. 核心統計與數據更新函式 ---
 function calculateFavorites() {
     const actorCounts = {}; 
@@ -3346,6 +3598,7 @@ window.checkStorageUsage = function() {
             
             document.getElementById('home-streak-display').textContent = currentStreak;
             updateMilkGlass();
+            updateRoommateDisplay();
         }
 
         window.switchDiaryView = function(v) {
@@ -5070,7 +5323,9 @@ window.toggleActorTypeLabel = function() {
         
         // --- Init ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadAllData(); updateHomeDisplay();
+            loadAllData();
+            initRoommateSystem();
+            updateHomeDisplay();
             setInterval(() => { if(document.getElementById('home').classList.contains('active')) updateHomeDisplay(); }, 60000);
             
             /// Setup New Selectors
@@ -5773,137 +6028,7 @@ window.toggleActorTypeLabel = function() {
         document.getElementById('sys-msg').innerHTML = ""; 
         document.getElementById('sys-actions').innerHTML = `<div style="text-align:center;">${btns}</div>`;
         document.getElementById('system-modal').classList.add('active');
-    }
-    // === 😇 天使與惡魔 😈 互動系統 ===
-
-        const ANGEL_LINES = {
-            winning: [ // 禁慾時說的話
-                "身體正在淨化，感覺到了嗎？",
-                "忍耐是美德，你的意志力很強！",
-                "把精力用在偉大的事情上吧。",
-                "別理隔壁那個紅色的傢伙。",
-                "你的手是用來改變世界的，不是尻槍。",
-                "保持清醒，遠離誘惑。",
-                "你可以成為魔法師的！"
-            ],
-            losing: [ // 縱慾時的無奈
-                "唉...又破功了。",
-                "神啊，請原諒這個人...",
-                "別讓色慾打破你內心的平靜呀...",
-                "色即是空，空即是色啊施主。",
-                "你需要聖水洗滌一下心靈。"
-            ]
-        };
-
-        const DEMON_LINES = {
-            winning: [ // 縱慾時說的話
-                "這就是活著的感覺！爽！",
-                "再來一發？反正沒人知道。",
-                "打破紀錄就是現在！",
-                "禁慾多無聊，快活才是真理。",
-                "嘿嘿，我就知道你忍不住。",
-                "你的收藏櫃裡有新東西了吧？",
-                "今晚... 很漫長喔😈"
-            ],
-            losing: [ // 禁慾時的挑撥
-                "你不悶嗎？我好悶。",
-                "你的手在呼喚你...",
-                "別裝了，其實你很想要。",
-                "已經積很多了，快來一發吧！",
-                "偶爾放鬆一下又不會怎樣。",
-                "只要一發，煩惱全消喔。"
-            ]
-        };
-
-        // 更新吉祥物狀態 (每次回到首頁、新增紀錄後呼叫)
-        function updateMascots() {
-            const angelEl = document.getElementById('char-angel');
-            const demonEl = document.getElementById('char-demon');
-            const angelMsg = document.getElementById('angel-msg');
-            const demonMsg = document.getElementById('demon-msg');
-            
-            if(!angelEl || !demonEl) return;
-
-            // 1. 計算距離上次的時間 (小時)
-            let hoursSince = 9999;
-            if (ejaculationRecords.length > 0) {
-                const sorted = [...ejaculationRecords].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                const lastTime = new Date(sorted[0].timestamp);
-                const now = new Date();
-                hoursSince = (now - lastTime) / (1000 * 60 * 60);
-            }
-
-            // 2. 判斷誰是贏家 (設定閾值：14小時)
-            // < 14小時: 惡魔贏 (剛發射不久)
-            // > 14小時: 天使贏 (正在禁慾)
-            const THRESHOLD_HOURS = 14;
-            const isDemonTime = hoursSince < THRESHOLD_HOURS;
-
-            if (isDemonTime) {
-                // 😈 惡魔回合
-                demonEl.className = 'character winning';
-                angelEl.className = 'character'; // 天使變暗
-                
-                // 設定對話
-                setRandomText(demonMsg, DEMON_LINES.winning);
-                setRandomText(angelMsg, ANGEL_LINES.losing);
-                
-            } else {
-                // 😇 天使回合
-                angelEl.className = 'character winning';
-                demonEl.className = 'character'; // 惡魔變暗
-                
-                // 設定對話
-                setRandomText(angelMsg, ANGEL_LINES.winning);
-                setRandomText(demonMsg, DEMON_LINES.losing);
-            }
-        }
-
-        function setRandomText(el, array) {
-            // 隨機選一句，但避免跟上次完全一樣 (簡易版)
-            const text = array[Math.floor(Math.random() * array.length)];
-            el.textContent = text;
-        }
-
-        // 點擊互動功能：點擊角色時強制換一句話並顯示氣泡
-        window.tapMascot = function(type) {
-            const el = document.getElementById(`char-${type}`);
-            const msgEl = document.getElementById(`${type}-msg`);
-            
-            // 判斷目前是誰的回合，決定要講什麼類型的幹話
-            const isWinning = el.classList.contains('winning');
-            let textArray = [];
-
-            if (type === 'angel') {
-                textArray = isWinning ? ANGEL_LINES.winning : ANGEL_LINES.losing;
-            } else {
-                textArray = isWinning ? DEMON_LINES.winning : DEMON_LINES.losing;
-            }
-            
-            // 換句話
-            setRandomText(msgEl, textArray);
-            
-            // 強制顯示氣泡動畫
-            el.classList.remove('talking');
-            void el.offsetWidth; // trigger reflow
-            el.classList.add('talking');
-            
-            // 2秒後收起氣泡 (如果是贏家，氣泡本來就會亮著，就不需要收起)
-            if (!isWinning) {
-                setTimeout(() => {
-                    el.classList.remove('talking');
-                }, 2000);
-            }
-        };
-
-        // 為了讓對話有點變化，每次進入首頁時，除了原本的 updateHomeDisplay，也要更新吉祥物
-        // 我們利用一個 setInterval 或者 hook 到 updateHomeDisplay
-        const _originalUpdateHome = window.updateHomeDisplay;
-        window.updateHomeDisplay = function() {
-            _originalUpdateHome(); // 執行原本的邏輯
-            updateMascots();       // 執行吉祥物邏輯
-        };
-        
+    }   
         /* === 相簿功能邏輯 (New) === */
         let tempAlbumPhoto = ""; // 暫存上傳的照片
 
