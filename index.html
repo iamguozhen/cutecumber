@@ -6500,7 +6500,7 @@ window.toggleActorTypeLabel = function() {
                 // 依角色分群顯示
                 const pids = [...new Set(cardsToShow.map(c => c.poolId))];
                 pids.forEach(pid => {
-                    let charName = pid === 'duo_shared' ? '雙人組' : (ROOMMATES.find(r => (r.cardPoolId || r.id) === pid)?.name || '未知');
+                    let charName = pid === 'duo_shared' ? 'David&Nicholas' : (ROOMMATES.find(r => (r.cardPoolId || r.id) === pid)?.name || '未知');
                     let html = `<div class="gallery-sub-title">👤 ${charName}</div><div class="card-grid">`;
                     const charCards = cardsToShow.filter(c => c.poolId === pid);
                     charCards.forEach(card => html += generateCardHtml(card));
