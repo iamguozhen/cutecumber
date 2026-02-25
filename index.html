@@ -2939,7 +2939,29 @@ window.compressImage = function(f) {
             // 🚨 劈腿判定：如果目前有進度，而且想換的對象(卡池)不一樣
             if (gachaData.progress > 0 && gachaData.targetId && gachaData.targetId !== targetPoolId) {
                 closeDormModal();
-                showConfirm(`🚨 劈腿警告！\n\n你目前已經為上一個對象累積了 ${gachaData.progress} 次紀錄，快要可以抽卡了。\n\n確定要換人嗎？換人的話目前的累積將會歸零喔！`, () => {
+                
+                // 取得「被拋棄」的現任室友名字
+                const currentId = localStorage.getItem('cuteCumberRoommate');
+                const currentChar = ROOMMATES.find(r => r.id === currentId);
+                const currentName = currentChar ? currentChar.name : "Baby";
+
+                // 準備隨機的情境台詞 (傲嬌、佔有慾、渴求)
+                const warningLines = [
+                    // 佔有慾
+                    `"Are you seriously leaving me for him? After I let you cum for me ${gachaData.progress} times?"`,
+                    // 傲嬌
+                    `"Hmph. Go to him if you want. But don't expect me to remember those ${gachaData.progress} times you begged for me."`,
+                    // 渴求/挽留
+                    `"Wait... don't go. You already gave me ${gachaData.progress} loads... just a little more and you'll get your reward."`,
+                    // 調情/威脅
+                    `"Leaving so soon? We were just getting to the good round ${gachaData.progress}. Choose him, and I'm wiping the slate clean."`
+                ];
+                const randomLine = warningLines[Math.floor(Math.random() * warningLines.length)];
+                
+                // 組合台詞與系統提示
+                const finalMsg = `${randomLine}\n\n— ${currentName}\n\n[系統] 確定要換人嗎？目前的抽卡累積將會歸零！`;
+
+                showConfirm(finalMsg, () => {
                     // 玩家執意要換，無情歸零
                     gachaData.progress = 0;
                     executeSwitchRoommate(id, targetPoolId);
