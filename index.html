@@ -6549,22 +6549,6 @@ window.toggleActorTypeLabel = function() {
             `;
         }
 
-        // 產生單張卡片的 HTML
-        function generateCardHtml(card) {
-            const isUnlocked = gachaData.unlocked[card.id];
-            
-            // 如果已解鎖，點擊可以看大圖；未解鎖則點擊無效或跳提示
-            const clickAction = isUnlocked 
-                ? `openGalleryViewer('${card.url}')` 
-                : `showAlert('尚未解鎖！\\n請在首頁選擇該角色並累積發射次數來抽取。')`;
-                
-            return `
-                <div class="gacha-card ${isUnlocked ? '' : 'locked'}" onclick="${clickAction}">
-                    <img src="${card.url}" class="gacha-card-img" loading="lazy">
-                </div>
-            `;
-        }
-
         // 開啟卡片大圖 (借用你原本相簿的 photo-view-modal)
         window.openGalleryViewer = function(url) {
             document.getElementById('pv-img').src = url;
@@ -6807,7 +6791,7 @@ window.toggleActorTypeLabel = function() {
         /* 深色模式 */
         body.dark-mode .gallery-sub-title { color: #aaa; }
         body.dark-mode .gacha-card.locked { background: #222; border-color: #333; }
-        body.dark-mode .gacha-card.locked .gacha-card-img { filter: brightness(0) invert(0.2); }
+        
         /* === 圖鑑橫向次分類標籤 === */
         .gallery-sub-tabs-container {
             display: flex;
