@@ -1201,6 +1201,12 @@ body.dark-mode .calendar-day.today {
             <div id="white-room-container" class="white-room-container">
                 <img id="roommate-img" class="roommate-img" src="" alt="Roommate" onclick="clickRoommate()" style="cursor: pointer;">
                 <div class="roommate-status" id="roommate-status">日常</div>
+                
+                <div id="roommate-progress" style="position:absolute; top:12px; left:12px; background:rgba(255,255,255,0.85); backdrop-filter:blur(4px); padding:4px 8px; border-radius:12px; font-size:14px; box-shadow:0 2px 5px rgba(0,0,0,0.1); z-index:10;">
+                    🤍🤍🤍
+                </div>
+                <button id="btn-gacha" class="btn-gacha" onclick="startGacha()"> 🃏 抽取卡牌 🃏 </button>
+
                 <button class="btn-dorm" onclick="openDormModal()">🚪 男子宿舍</button>
             </div>
             <div id="milk-component" class="milk-section">
@@ -1809,6 +1815,25 @@ body.dark-mode .calendar-day.today {
             <div class="key-btn" onclick="pressKey(4)">4</div><div class="key-btn" onclick="pressKey(5)">5</div><div class="key-btn" onclick="pressKey(6)">6</div>
             <div class="key-btn" onclick="pressKey(7)">7</div><div class="key-btn" onclick="pressKey(8)">8</div><div class="key-btn" onclick="pressKey(9)">9</div>
             <div class="key-btn transparent" onclick="cancelPasscode()">取消</div><div class="key-btn" onclick="pressKey(0)">0</div><div class="key-btn transparent" onclick="deleteKey()">⌫</div>
+        </div>
+    </div>
+    
+    <div id="gacha-modal" class="modal-overlay" style="z-index: 4000;">
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%;">
+            <div style="font-size:20px; font-weight:800; color:white; margin-bottom:20px; text-shadow:0 2px 5px rgba(0,0,0,0.5);">給你的專屬獎勵...</div>
+            
+            <div class="gacha-card-container">
+                <div id="gacha-card-inner" class="gacha-card-inner" onclick="flipGachaCard()">
+                    <div class="gacha-card-front">
+                        <img src="./images/ui/card_cover.JPG" style="width:100%; height:100%; object-fit:cover; border-radius:16px;" alt="Card Cover">
+                    </div>
+                    <div class="gacha-card-back">
+                        <img id="gacha-result-img" src="" style="width:100%; height:100%; object-fit:cover;">
+                    </div>
+                </div>
+            </div>
+
+            <button id="gacha-close-btn" class="btn-base" style="margin-top: 30px; background:rgba(255,255,255,0.2); color:white; border:1px solid rgba(255,255,255,0.5); display:none; padding:10px 40px; font-size:16px;" onclick="closeGachaModal()">收下寫真並放入圖鑑</button>
         </div>
     </div>
 
@@ -2782,9 +2807,9 @@ window.compressImage = function(f) {
                     './images/roommates/char_07/default_4.PNG',
                     './images/roommates/char_07/default_5.PNG'
                 ],
-                high: './images/roommates/char_04/high_1.JPG',       // 單次高潮
-                doubleHigh: './images/roommates/char_04/high_2.JPG', // 雙重高潮
-                angry: './images/roommates/char_04/angry.PNG'        // 生悶氣
+                high: './images/roommates/char_07/high_1.JPG',       // 單次高潮
+                doubleHigh: './images/roommates/char_07/high_2.JPG', // 雙重高潮
+                angry: './images/roommates/char_07/angry.PNG'        // 生悶氣
                },
            // 你可以繼續往下新增更多角色...
         ];
@@ -2907,12 +2932,34 @@ window.compressImage = function(f) {
         window.closeDormModal = function() { document.getElementById('dorm-modal').classList.remove('active'); }
 
         window.selectRoommate = function(id) {
+            const targetChar = ROOMMATES.find(r => r.id === id);
+            if (!targetChar) return;
+            const targetPoolId = targetChar.cardPoolId || targetChar.id;
+
+            // 🚨 劈腿判定：如果目前有進度，而且想換的對象(卡池)不一樣
+            if (gachaData.progress > 0 && gachaData.targetId && gachaData.targetId !== targetPoolId) {
+                closeDormModal();
+                showConfirm(`🚨 劈腿警告！\n\n你目前已經為上一個對象累積了 ${gachaData.progress} 次紀錄，快要可以抽卡了。\n\n確定要換人嗎？換人的話目前的累積將會歸零喔！`, () => {
+                    // 玩家執意要換，無情歸零
+                    gachaData.progress = 0;
+                    executeSwitchRoommate(id, targetPoolId);
+                });
+            } else {
+                // 安全切換 (包含雙人組內部互換不扣進度)
+                executeSwitchRoommate(id, targetPoolId);
+            }
+        };
+
+        function executeSwitchRoommate(id, targetPoolId) {
             localStorage.setItem('cuteCumberRoommate', id);
+            gachaData.targetId = targetPoolId;
+            localStorage.setItem(GACHA_KEY, JSON.stringify(gachaData));
             updateRoommateDisplay();
+            updateGachaProgressUI(); // 更新愛心狀態
             closeDormModal();
             if(navigator.vibrate) navigator.vibrate(50);
-             showAlert("切換成功！");}
-        
+            showAlert("切換成功！");
+        }
         // --- 1. 核心統計與數據更新函式 ---
 function calculateFavorites() {
     const actorCounts = {}; 
@@ -3658,6 +3705,7 @@ window.checkStorageUsage = function() {
             document.getElementById('home-streak-display').textContent = currentStreak;
             updateMilkGlass();
             updateRoommateDisplay();
+            updateGachaProgressUI();
         }
 
         window.switchDiaryView = function(v) {
@@ -5444,6 +5492,8 @@ window.toggleActorTypeLabel = function() {
                     usedVideo: videoObj,partners: partnersArr
                 }); 
                 saveRecordData(); 
+
+                addGachaProgress(document.getElementById('input-type').value);
                 
                 const hasUnlocked = checkAchievements(() => { showAlert('紀錄成功 💦'); });
                 if (!hasUnlocked) { showAlert('紀錄成功 💦'); }
@@ -6280,13 +6330,13 @@ window.toggleActorTypeLabel = function() {
                 'Tarzan': { prefix: 'tarzan', count: 5 }
             },
             'duo_shared': { // duo. David & Nicholas (雙人組共用圖庫)
-                'Uniform': { prefix: 'uniform', count: 5 },
-                'Athlete': { prefix: 'athlete', count: 5 },
-                'Bimbo': { prefix: 'bimbo', count: 5 },
-                'Wrestler': { prefix: 'wrestler', count: 5 },
-                'Cowboy': { prefix: 'cowboy', count: 5 },
-                'Daddy': { prefix: 'daddy', count: 5 },
-                'Tarzan': { prefix: 'tarzan', count: 5 }
+                'Uniform': { prefix: 'uniform', count: 2 },
+                'Athlete': { prefix: 'athlete', count: 0 },
+                'Bimbo': { prefix: 'bimbo', count: 0 },
+                'Wrestler': { prefix: 'wrestler', count: 0 },
+                'Cowboy': { prefix: 'cowboy', count: 0 },
+                'Daddy': { prefix: 'daddy', count: 0 },
+                'Tarzan': { prefix: 'tarzan', count: 0 }
             },
             'char_05': { // 5. Bill
                 'Uniform': { prefix: 'uniform', count: 5 },
@@ -6481,13 +6531,20 @@ window.toggleActorTypeLabel = function() {
         // 產生單張卡片的 HTML
         function generateCardHtml(card) {
             const isUnlocked = gachaData.unlocked[card.id];
+            
+            // 點擊動作：已解鎖看大圖，未解鎖跳提示
             const clickAction = isUnlocked 
                 ? `openGalleryViewer('${card.url}')` 
                 : `showAlert('尚未解鎖！\\n請在首頁選擇該角色並累積發射次數來抽取。')`;
+            
+            // 👇 關鍵邏輯：解鎖了就顯示真實寫真圖 (card.url)，還沒解鎖就顯示你的專屬封面！
+            const displayImg = isUnlocked 
+                ? card.url 
+                : './images/ui/card_locked.JPG'; // 確保這裡的副檔名跟你的圖一樣哦！
                 
             return `
                 <div class="gacha-card ${isUnlocked ? '' : 'locked'}" onclick="${clickAction}">
-                    <img src="${card.url}" class="gacha-card-img" loading="lazy">
+                    <img src="${displayImg}" class="gacha-card-img" loading="lazy">
                 </div>
             `;
         }
@@ -6511,10 +6568,136 @@ window.toggleActorTypeLabel = function() {
         // 開啟卡片大圖 (借用你原本相簿的 photo-view-modal)
         window.openGalleryViewer = function(url) {
             document.getElementById('pv-img').src = url;
-            document.getElementById('pv-caption').textContent = "✨ 專屬寫真 ✨";
             // 隱藏刪除按鈕 (圖鑑的圖片不能刪)
             document.getElementById('pv-btn-delete').style.display = 'none';
             document.getElementById('photo-view-modal').classList.add('active');
+        };
+        // === 抽卡系統核心邏輯 ===
+        let currentGachaCard = null;
+
+        // 更新首頁的愛心與按鈕 UI (支援 CUMpleted 判定)
+        window.updateGachaProgressUI = function() {
+            const progressEl = document.getElementById('roommate-progress');
+            const gachaBtn = document.getElementById('btn-gacha');
+            if(!progressEl) return;
+            
+            // 1. 取得目前選擇的對象與卡池
+            const selectedId = localStorage.getItem('cuteCumberRoommate') || ROOMMATES[0].id;
+            const char = ROOMMATES.find(r => r.id === selectedId);
+            const poolId = char ? (char.cardPoolId || char.id) : null;
+
+            // 2. 檢查是否已經完全解鎖所有卡片
+            if (poolId) {
+                const poolCards = GACHA_CARDS.filter(c => c.poolId === poolId);
+                const lockedCards = poolCards.filter(c => !gachaData.unlocked[c.id]);
+
+                // 如果這個角色有卡片，且「未解鎖數量為 0」，顯示 CUMpleted
+                if (poolCards.length > 0 && lockedCards.length === 0) {
+                    progressEl.innerHTML = '<span style="color: #FF1493; font-weight: 900; font-style: italic; letter-spacing: 1px;"> CUMpleted </span>';
+                    if(gachaBtn) gachaBtn.style.display = 'none';
+                    return; // 結束執行，不顯示愛心
+                }
+            }
+
+            // 3. 正常攻略中的愛心邏輯
+            if(gachaData.progress === 0) progressEl.innerHTML = '🤍🤍🤍';
+            if(gachaData.progress === 1) progressEl.innerHTML = '❤️🤍🤍';
+            if(gachaData.progress === 2) progressEl.innerHTML = '❤️❤️🤍';
+            
+            if(gachaData.progress >= 3) {
+                progressEl.innerHTML = '❤️❤️❤️ <span style="font-size:12px; font-weight:bold; color:var(--color-accent); margin-left:4px; animation: bounce 1s infinite;">可抽卡!</span>';
+                if(gachaBtn) gachaBtn.style.display = 'block';
+            } else {
+                if(gachaBtn) gachaBtn.style.display = 'none';
+            }
+        };
+
+        // 每次發射後呼叫，累積好感度
+        window.addGachaProgress = function(recordType) {
+            // 只有自己來或做愛才算數 (夢遺不算)
+            if (recordType !== '自慰' && recordType !== '做愛') return;
+
+            const selectedId = localStorage.getItem('cuteCumberRoommate') || ROOMMATES[0].id;
+            const char = ROOMMATES.find(r => r.id === selectedId);
+            const poolId = char.cardPoolId || char.id;
+
+            // 如果換人了，先強制綁定新的卡池
+            if (gachaData.targetId !== poolId) {
+                gachaData.targetId = poolId;
+                gachaData.progress = 0;
+            }
+
+            // 檢查這個卡池是不是已經被抽光了？
+            const poolCards = GACHA_CARDS.filter(c => c.poolId === poolId);
+            const lockedCards = poolCards.filter(c => !gachaData.unlocked[c.id]);
+
+            // 如果卡片都被解鎖完了，就不再增加進度，也不會跳抽卡按鈕
+            if (lockedCards.length === 0) return;
+
+            if (gachaData.progress < 3) {
+                gachaData.progress++;
+                localStorage.setItem(GACHA_KEY, JSON.stringify(gachaData));
+            }
+        };
+
+        // 按下首頁「抽取寫真」按鈕
+        window.startGacha = function() {
+            if (gachaData.progress < 3) return;
+
+            const poolId = gachaData.targetId;
+            const poolCards = GACHA_CARDS.filter(c => c.poolId === poolId);
+            const lockedCards = poolCards.filter(c => !gachaData.unlocked[c.id]);
+
+            if (lockedCards.length === 0) {
+                showAlert("這位角色的所有寫真都已經被你解鎖完畢啦！");
+                gachaData.progress = 0;
+                localStorage.setItem(GACHA_KEY, JSON.stringify(gachaData));
+                updateGachaProgressUI();
+                return;
+            }
+
+            // 🎲 隨機從未解鎖的卡片中抽出一張
+            const randomIndex = Math.floor(Math.random() * lockedCards.length);
+            currentGachaCard = lockedCards[randomIndex];
+
+            // 準備卡背與圖片 (重置翻牌狀態)
+            document.getElementById('gacha-card-inner').style.transform = 'rotateY(0deg)';
+            document.getElementById('gacha-result-img').src = currentGachaCard.url;
+            document.getElementById('gacha-close-btn').style.display = 'none';
+            document.getElementById('gacha-modal').classList.add('active');
+        };
+
+        // 點擊卡背進行 3D 翻轉與正式解鎖
+        window.flipGachaCard = function() {
+            if (!currentGachaCard) return;
+            
+            // 執行 3D 翻轉
+            document.getElementById('gacha-card-inner').style.transform = 'rotateY(180deg)';
+            if(navigator.vibrate) navigator.vibrate([100, 50, 100]); // 興奮的震動回饋
+
+            // 標記為已解鎖，並將好感度歸零
+            if (!gachaData.unlocked[currentGachaCard.id]) {
+                gachaData.unlocked[currentGachaCard.id] = true;
+                gachaData.progress = 0; 
+                localStorage.setItem(GACHA_KEY, JSON.stringify(gachaData));
+                
+                // 順便把背後的 UI 更新
+                updateGachaProgressUI();
+            }
+
+            // 延遲顯示「收下寫真」的按鈕，讓玩家欣賞一下
+            setTimeout(() => {
+                document.getElementById('gacha-close-btn').style.display = 'block';
+            }, 1000);
+        };
+
+        window.closeGachaModal = function() {
+            document.getElementById('gacha-modal').classList.remove('active');
+            currentGachaCard = null;
+            // 跳去圖鑑頁面讓他看新卡 (選填，增加成就感)
+            switchStatsView('gallery');
+            const statsTab = document.querySelector('.tab-item[data-target="stats"]');
+            if(statsTab) statsTab.click();
         };
 
     </script> <style>   
@@ -6620,19 +6803,6 @@ window.toggleActorTypeLabel = function() {
             border-color: #eee;
             background: #f5f5f5;
         }
-        .gacha-card.locked .gacha-card-img {
-            filter: brightness(0) invert(0.8); /* 變成灰色剪影 */
-            opacity: 0.5;
-        }
-        .gacha-card.locked::after {
-            content: '🔒';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 32px;
-            opacity: 0.7;
-        }
 
         /* 深色模式 */
         body.dark-mode .gallery-sub-title { color: #aaa; }
@@ -6673,6 +6843,30 @@ window.toggleActorTypeLabel = function() {
         /* 深色模式適配 */
         body.dark-mode .gal-sub-tab { background: #222; border-color: #333; color: #888; }
         body.dark-mode .gal-sub-tab.active { background: rgba(118, 200, 70, 0.2); color: var(--color-primary); border-color: var(--color-primary); }
+        
+        /* === 抽卡動畫專用樣式 === */
+        .btn-gacha {
+            display: none; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); z-index: 20;
+            padding: 12px 24px; font-size: 16px; font-weight: 900;
+            color: white; background: linear-gradient(45deg, var(--color-accent), #FF1493);
+            border: 2px solid white; border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.5);
+            cursor: pointer; animation: pulseGacha 1.5s infinite;
+        }
+        @keyframes pulseGacha { 
+            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 10px rgba(255,105,180,0.5); } 
+            50% { transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 0 20px rgba(255,105,180,0.8); } 
+            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 10px rgba(255,105,180,0.5); } 
+        }
+
+        .gacha-card-container { perspective: 1000px; width: 280px; height: 400px; }
+        .gacha-card-inner { width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; position: relative; cursor: pointer; }
+        .gacha-card-front, .gacha-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        .gacha-card-front { background: #111; border-radius: 16px; overflow: hidden; }
+        .gacha-card-front::after { content: '點擊翻牌'; color: white; font-size: 20px; font-weight: bold; letter-spacing: 2px; margin-top: 20px; animation: pulseText 1.5s infinite; }
+        .gacha-card-back { background: #fff; transform: rotateY(180deg); border: 4px solid var(--color-gold); overflow: hidden; }
+        @keyframes pulseText { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
 
     </style>
