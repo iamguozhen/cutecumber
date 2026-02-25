@@ -1303,8 +1303,9 @@ body.dark-mode .calendar-day.today {
         <section id="stats">
             <h1>數據</h1>
             <div class="view-toggle stats-toggle-container">
-                <button class="toggle-btn active" onclick="switchStatsView('charts')">📊 圖表分析</button>
-                <button class="toggle-btn" onclick="switchStatsView('achievements')">🏆 成就獎章</button>
+                <button class="toggle-btn active" onclick="switchStatsView('charts')">📊 分析</button>
+                <button class="toggle-btn" onclick="switchStatsView('achievements')">🏆 成就</button>
+                <button class="toggle-btn" onclick="switchStatsView('gallery')">📚 圖鑑</button>
             </div>
             <!-- View 1: Charts -->
             <div id="stats-view-charts">
@@ -1391,6 +1392,18 @@ body.dark-mode .calendar-day.today {
             <!-- View 2: Achievements -->
             <div id="stats-view-achievements" style="display:none;">
                 <div id="ach-list-container"></div>
+            </div>
+            <div id="stats-view-gallery" style="display:none;">
+                
+                <div class="view-toggle" style="margin-bottom: 15px; background: var(--color-card-bg); border: 1px solid var(--color-border);">
+                    <button id="btn-gal-char" class="toggle-btn active" onclick="renderGallery('character')">👤 依角色分類</button>
+                    <button id="btn-gal-theme" class="toggle-btn" onclick="renderGallery('theme')">🎭 依主題分類</button>
+                </div>
+
+                <div id="gallery-sub-tabs" class="gallery-sub-tabs-container"></div>
+
+                <div id="gallery-container"></div>
+                
             </div>
         </section>
 
@@ -1855,6 +1868,13 @@ body.dark-mode .calendar-day.today {
         let tempRecordPhoto = "";
         let tempActorAvatar = "";
         let tempVideoThumb = "";
+        // 👇 補上這一段：抽卡系統的全域變數
+        const GACHA_KEY = 'cuteCumberGacha';
+        let gachaData = {
+            targetId: null,
+            progress: 0,
+            unlocked: {} // 記錄解鎖狀態
+        };
         // --- Multi-Select Logic ---
         let tempActorsList = []; // [ {id, name}, ... ] (For Record Form)
         let editTempActorsList = []; // (For Edit Form)
@@ -2245,7 +2265,7 @@ window.compressImage = function(f) {
                 }
             } catch(e) { unlockedAchievements = []; }
             try { userProfile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || { nickname: '', birthday: '' }; } catch(e) { userProfile = { nickname: '', birthday: '' }; }
-            
+            try { gachaData = JSON.parse(localStorage.getItem(GACHA_KEY)) || { targetId: null, progress: 0, unlocked: {} }; } catch(e) { gachaData = { targetId: null, progress: 0, unlocked: {} }; }
             const savedDarkMode = localStorage.getItem('cuteCumberDarkMode');
             const toggleEl = document.getElementById('dark-mode-toggle');
             if (savedDarkMode === 'true') {
@@ -2684,6 +2704,7 @@ window.compressImage = function(f) {
            {
                 id: 'char_duo_A',       // A男的獨立ID
                 name: 'David',
+                cardPoolId: 'duo_shared',
                 desc: '',
                 avatar: './images/roommates/char_duo_A/avatar.PNG', // A自己的大頭照
         
@@ -2702,6 +2723,7 @@ window.compressImage = function(f) {
            {
                 id: 'char_duo_B',       // B男的獨立ID
                 name: 'Nicholas',
+                cardPoolId: 'duo_shared',
                 desc: '',
                 avatar: './images/roommates/char_duo_B/avatar.PNG', // B自己的大頭照
         
@@ -6219,6 +6241,314 @@ window.toggleActorTypeLabel = function() {
                 }
             }
         };
+        // === 1. 卡片配置藍圖 (Blueprint) ===
+        const CARD_CONFIG = {
+            'char_01': { // 1. Sebastian
+                'Boyfriend': { prefix: 'boyfriend', count: 5 },
+                'Policeman': { prefix: 'policeman', count: 5 },
+                'Firefighter': { prefix: 'firefighter', count: 5 },
+                'Army': { prefix: 'army', count: 5 },
+                'Navy': { prefix: 'navy', count: 5 },
+                'Boyscout': { prefix: 'boyscout', count: 5 },
+                'Wrestler': { prefix: 'wrestler', count: 5 },
+                'Blondie': { prefix: 'blondie', count: 5 },
+                'Tarzan': { prefix: 'tarzan', count: 5 },
+                'Kinky Bald': { prefix: 'kinky_bald', count: 5 },
+                'Mustache Uncle': { prefix: 'mustache_uncle', count: 5 }
+            },
+            'char_02': { // 2. Andrew
+                'Boyfriend': { prefix: 'boyfriend', count: 5 },
+                'Policeman': { prefix: 'policeman', count: 5 },
+                'Firefighter': { prefix: 'firefighter', count: 5 },
+                'Army': { prefix: 'army', count: 5 },
+                'Navy': { prefix: 'navy', count: 5 },
+                'Boyscout': { prefix: 'boyscout', count: 5 },
+                'Wrestler': { prefix: 'wrestler', count: 5 },
+                'Blondie': { prefix: 'blondie', count: 5 },
+                'Tarzan': { prefix: 'tarzan', count: 5 },
+                'Kinky Bald': { prefix: 'kinky_bald', count: 5 },
+                'Mustache Uncle': { prefix: 'mustache_uncle', count: 5 }
+            },
+            'char_03': { // 3. Cameron
+                'Boyfriend': { prefix: 'boyfriend', count: 5 },
+                'Policeman': { prefix: 'policeman', count: 5 },
+                'Firefighter': { prefix: 'firefighter', count: 5 },
+                'Army': { prefix: 'army', count: 5 },
+                'Navy': { prefix: 'navy', count: 5 },
+                'Boyscout': { prefix: 'boyscout', count: 5 },
+                'Wrestler': { prefix: 'wrestler', count: 5 },
+                'Blondie': { prefix: 'blondie', count: 5 },
+                'Tarzan': { prefix: 'tarzan', count: 5 },
+                'Kinky Bald': { prefix: 'kinky_bald', count: 5 },
+                'Mustache Uncle': { prefix: 'mustache_uncle', count: 5 }
+            },
+            'char_04': { // 4. Josh
+                'Boyfriend': { prefix: 'boyfriend', count: 5 },
+                'Policeman': { prefix: 'policeman', count: 5 },
+                'Firefighter': { prefix: 'firefighter', count: 5 },
+                'Army': { prefix: 'army', count: 5 },
+                'Navy': { prefix: 'navy', count: 5 },
+                'Boyscout': { prefix: 'boyscout', count: 5 },
+                'Wrestler': { prefix: 'wrestler', count: 5 },
+                'Blondie': { prefix: 'blondie', count: 5 },
+                'Tarzan': { prefix: 'tarzan', count: 5 },
+                'Kinky Bald': { prefix: 'kinky_bald', count: 5 },
+                'Mustache Uncle': { prefix: 'mustache_uncle', count: 5 }
+            },
+            'duo_shared': { // duo. David & Nicholas (雙人組共用圖庫)
+                'Boyfriend': { prefix: 'boyfriend', count: 5 },
+                'Policeman': { prefix: 'policeman', count: 5 },
+                'Firefighter': { prefix: 'firefighter', count: 5 },
+                'Army': { prefix: 'army', count: 5 },
+                'Navy': { prefix: 'navy', count: 5 },
+                'Boyscout': { prefix: 'boyscout', count: 5 },
+                'Wrestler': { prefix: 'wrestler', count: 5 },
+                'Blondie': { prefix: 'blondie', count: 5 },
+                'Tarzan': { prefix: 'tarzan', count: 5 },
+                'Kinky Bald': { prefix: 'kinky_bald', count: 5 },
+                'Mustache Uncle': { prefix: 'mustache_uncle', count: 5 }
+            },
+            'char_05': { // 5. Bill
+                'Boyfriend': { prefix: 'boyfriend', count: 5 },
+                'Policeman': { prefix: 'policeman', count: 5 },
+                'Firefighter': { prefix: 'firefighter', count: 5 },
+                'Army': { prefix: 'army', count: 5 },
+                'Navy': { prefix: 'navy', count: 5 },
+                'Boyscout': { prefix: 'boyscout', count: 5 },
+                'Wrestler': { prefix: 'wrestler', count: 5 },
+                'Blondie': { prefix: 'blondie', count: 5 },
+                'Tarzan': { prefix: 'tarzan', count: 5 },
+                'Kinky Bald': { prefix: 'kinky_bald', count: 5 },
+                'Mustache Uncle': { prefix: 'mustache_uncle', count: 5 }
+            },
+            'char_06': { // 6. Chris
+                'Boyfriend': { prefix: 'boyfriend', count: 5 },
+                'Policeman': { prefix: 'policeman', count: 5 },
+                'Firefighter': { prefix: 'firefighter', count: 5 },
+                'Army': { prefix: 'army', count: 5 },
+                'Navy': { prefix: 'navy', count: 5 },
+                'Boyscout': { prefix: 'boyscout', count: 5 },
+                'Wrestler': { prefix: 'wrestler', count: 5 },
+                'Blondie': { prefix: 'blondie', count: 5 },
+                'Tarzan': { prefix: 'tarzan', count: 5 },
+                'Kinky Bald': { prefix: 'kinky_bald', count: 5 },
+                'Mustache Uncle': { prefix: 'mustache_uncle', count: 5 }
+            },
+            'char_07': { // 7. Michael
+                'Boyfriend': { prefix: 'boyfriend', count: 5 },
+                'Policeman': { prefix: 'policeman', count: 5 },
+                'Firefighter': { prefix: 'firefighter', count: 5 },
+                'Army': { prefix: 'army', count: 5 },
+                'Navy': { prefix: 'navy', count: 5 },
+                'Boyscout': { prefix: 'boyscout', count: 5 },
+                'Wrestler': { prefix: 'wrestler', count: 5 },
+                'Blondie': { prefix: 'blondie', count: 5 },
+                'Tarzan': { prefix: 'tarzan', count: 5 },
+                'Kinky Bald': { prefix: 'kinky_bald', count: 5 },
+                'Mustache Uncle': { prefix: 'mustache_uncle', count: 5 }
+            }
+        };
+
+        // === 2. 🤖 卡片自動生成工廠 ===
+        let GACHA_CARDS = [];
+        
+        for (const poolId in CARD_CONFIG) {
+            for (const theme in CARD_CONFIG[poolId]) {
+                const data = CARD_CONFIG[poolId][theme];
+                for (let i = 1; i <= data.count; i++) {
+                    GACHA_CARDS.push({
+                        id: `c_${poolId}_${data.prefix}_${i}`, 
+                        poolId: poolId,
+                        theme: theme,
+                        url: `./images/roommates/${poolId}/cards/${data.prefix}_${i}.jpg`
+                    });
+                }
+            }
+        }
+
+
+        // === 2. 視圖切換邏輯 (修補原本的 switchStatsView) ===
+        window.switchStatsView = function(view) {
+            const c = document.getElementById('stats-view-charts');
+            const a = document.getElementById('stats-view-achievements');
+            const g = document.getElementById('stats-view-gallery');
+            const btns = document.querySelectorAll('.stats-toggle-container .toggle-btn');
+            
+            c.style.display = 'none'; a.style.display = 'none'; g.style.display = 'none';
+            btns[0].classList.remove('active'); btns[1].classList.remove('active'); btns[2].classList.remove('active');
+            
+            if(view === 'charts') {
+                c.style.display = 'block'; btns[0].classList.add('active'); calculateStats();
+            } else if(view === 'achievements') {
+                a.style.display = 'block'; btns[1].classList.add('active'); renderAchievements();
+            } else if(view === 'gallery') {
+                g.style.display = 'block'; btns[2].classList.add('active'); renderGallery('character'); // 預設打開依角色
+            }
+        };
+
+        // 紀錄目前選中的狀態
+        let currentGalMode = 'character';
+        let currentGalSub = '';
+
+        // 1. 初始化與主分類切換
+        window.renderGallery = function(mode) {
+            currentGalMode = mode;
+            document.getElementById('btn-gal-char').classList.toggle('active', mode === 'character');
+            document.getElementById('btn-gal-theme').classList.toggle('active', mode === 'theme');
+            
+            const subTabsContainer = document.getElementById('gallery-sub-tabs');
+            subTabsContainer.innerHTML = '';
+            
+            if (mode === 'character') {
+                // 👨‍💼 【抓出所有的角色】(從 ROOMMATES 抓，保證沒出卡片的人也會出現)
+                const uniquePools = [];
+                ROOMMATES.forEach(r => {
+                    // 如果有綁定卡池就用卡池 ID，沒有就用角色本身 ID
+                    const pid = r.cardPoolId || r.id; 
+                    if (!uniquePools.find(p => p.id === pid)) {
+                        uniquePools.push({
+                            id: pid,
+                            name: pid === 'duo_shared' ? 'David & Nicholas' : r.name
+                        });
+                    }
+                });
+                
+                // 建立橫向標籤
+                uniquePools.forEach(pool => {
+                    const btn = document.createElement('button');
+                    btn.className = 'gal-sub-tab';
+                    btn.textContent = pool.name;
+                    btn.onclick = () => selectGallerySubTab(pool.id, btn);
+                    subTabsContainer.appendChild(btn);
+                });
+                
+                // 預設選中第一個角色
+                if(uniquePools.length > 0) {
+                    currentGalSub = uniquePools[0].id;
+                    subTabsContainer.children[0].classList.add('active');
+                }
+            } else {
+                // 🎭 【抓出所有的主題】(從實際存在的卡片抓)
+                let themes = [...new Set(GACHA_CARDS.map(c => c.theme))];
+                if(themes.length === 0) themes = ['尚未解鎖主題'];
+                
+                themes.forEach(theme => {
+                    const btn = document.createElement('button');
+                    btn.className = 'gal-sub-tab';
+                    btn.textContent = theme;
+                    btn.onclick = () => selectGallerySubTab(theme, btn);
+                    subTabsContainer.appendChild(btn);
+                });
+                
+                if(themes.length > 0) {
+                    currentGalSub = themes[0];
+                    subTabsContainer.children[0].classList.add('active');
+                }
+            }
+            
+            // 渲染內容
+            renderGalleryContent();
+        };
+
+        // 2. 點擊次分類標籤
+        window.selectGallerySubTab = function(subId, btnEl) {
+            currentGalSub = subId;
+            // 移除其他按鈕的 active 狀態
+            const btns = document.getElementById('gallery-sub-tabs').children;
+            for(let i=0; i<btns.length; i++) btns[i].classList.remove('active');
+            // 把自己變成 active
+            btnEl.classList.add('active');
+            
+            // 重新渲染畫面
+            renderGalleryContent();
+        };
+
+        // 3. 渲染該標籤底下的卡片
+        window.renderGalleryContent = function() {
+            const container = document.getElementById('gallery-container');
+            container.innerHTML = '';
+            let cardsToShow = [];
+            
+            if (currentGalMode === 'character') {
+                // 過濾出這個角色的卡片
+                cardsToShow = GACHA_CARDS.filter(c => c.poolId === currentGalSub);
+                
+                if (cardsToShow.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:50px 20px; color:#aaa; background:var(--color-card-bg); border-radius:16px; border:1px dashed var(--color-border); margin-top:20px;">
+                            <div style="font-size:30px; margin-bottom:10px;">🎴</div>
+                            這個角色目前還沒有專屬卡片<br><small style="color:#ccc;">敬請期待後續更新！</small>
+                        </div>`;
+                    return;
+                }
+                
+                // 依主題分群顯示
+                const themes = [...new Set(cardsToShow.map(c => c.theme))];
+                themes.forEach(theme => {
+                    let html = `<div class="gallery-sub-title">${theme}</div><div class="card-grid">`;
+                    const themeCards = cardsToShow.filter(c => c.theme === theme);
+                    themeCards.forEach(card => html += generateCardHtml(card));
+                    html += `</div>`;
+                    container.innerHTML += html;
+                });
+                
+            } else {
+                // 過濾出這個主題的卡片
+                cardsToShow = GACHA_CARDS.filter(c => c.theme === currentGalSub);
+                if (cardsToShow.length === 0) return;
+                
+                // 依角色分群顯示
+                const pids = [...new Set(cardsToShow.map(c => c.poolId))];
+                pids.forEach(pid => {
+                    let charName = pid === 'duo_shared' ? '雙人組' : (ROOMMATES.find(r => (r.cardPoolId || r.id) === pid)?.name || '未知');
+                    let html = `<div class="gallery-sub-title">👤 ${charName}</div><div class="card-grid">`;
+                    const charCards = cardsToShow.filter(c => c.poolId === pid);
+                    charCards.forEach(card => html += generateCardHtml(card));
+                    html += `</div>`;
+                    container.innerHTML += html;
+                });
+            }
+        };
+
+        // 產生單張卡片的 HTML
+        function generateCardHtml(card) {
+            const isUnlocked = gachaData.unlocked[card.id];
+            const clickAction = isUnlocked 
+                ? `openGalleryViewer('${card.url}')` 
+                : `showAlert('尚未解鎖！\\n請在首頁選擇該角色並累積發射次數來抽取。')`;
+                
+            return `
+                <div class="gacha-card ${isUnlocked ? '' : 'locked'}" onclick="${clickAction}">
+                    <img src="${card.url}" class="gacha-card-img" loading="lazy">
+                </div>
+            `;
+        }
+
+        // 產生單張卡片的 HTML
+        function generateCardHtml(card) {
+            const isUnlocked = gachaData.unlocked[card.id];
+            
+            // 如果已解鎖，點擊可以看大圖；未解鎖則點擊無效或跳提示
+            const clickAction = isUnlocked 
+                ? `openGalleryViewer('${card.url}')` 
+                : `showAlert('尚未解鎖！\\n請在首頁選擇該角色並累積發射次數來抽取。')`;
+                
+            return `
+                <div class="gacha-card ${isUnlocked ? '' : 'locked'}" onclick="${clickAction}">
+                    <img src="${card.url}" class="gacha-card-img" loading="lazy">
+                </div>
+            `;
+        }
+
+        // 開啟卡片大圖 (借用你原本相簿的 photo-view-modal)
+        window.openGalleryViewer = function(url) {
+            document.getElementById('pv-img').src = url;
+            document.getElementById('pv-caption').textContent = "✨ 專屬寫真 ✨";
+            // 隱藏刪除按鈕 (圖鑑的圖片不能刪)
+            document.getElementById('pv-btn-delete').style.display = 'none';
+            document.getElementById('photo-view-modal').classList.add('active');
+        };
+
     </script> <style>   
         /* === 合輯 vs 真人 頭像區分樣式 === */
 
@@ -6283,6 +6613,100 @@ window.toggleActorTypeLabel = function() {
         body.dark-mode .collection-badge {
             background: rgba(50, 50, 50, 0.9); /* 深色模式下圖示背景變深 */
         }
+        /* === 卡片圖鑑專用樣式 === */
+        .gallery-section { margin-bottom: 30px; }
+        .gallery-section-title { font-size: 18px; font-weight: 800; color: var(--color-primary); margin-bottom: 10px; border-bottom: 2px solid rgba(118,200,70,0.2); padding-bottom: 5px; }
+        .gallery-sub-title { font-size: 14px; font-weight: bold; color: #666; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 5px;}
+        .gallery-sub-title::before { content: ''; display: block; width: 4px; height: 12px; background: var(--color-accent); border-radius: 2px;}
+
+        /* 2x3 排列 (兩欄網格) */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .gacha-card {
+            background: var(--color-card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--color-border);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            position: relative;
+            aspect-ratio: 3 / 4; /* 直式卡牌比例 */
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .gacha-card:active { transform: scale(0.96); }
+        
+        .gacha-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.3s;
+        }
+
+        /* 未解鎖狀態 (黑影與大鎖) */
+        .gacha-card.locked {
+            border-color: #eee;
+            background: #f5f5f5;
+        }
+        .gacha-card.locked .gacha-card-img {
+            filter: brightness(0) invert(0.8); /* 變成灰色剪影 */
+            opacity: 0.5;
+        }
+        .gacha-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            opacity: 0.7;
+        }
+
+        /* 深色模式 */
+        body.dark-mode .gallery-sub-title { color: #aaa; }
+        body.dark-mode .gacha-card.locked { background: #222; border-color: #333; }
+        body.dark-mode .gacha-card.locked .gacha-card-img { filter: brightness(0) invert(0.2); }
+        /* === 圖鑑橫向次分類標籤 === */
+        .gallery-sub-tabs-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            /* 隱藏卷軸但保留滑動功能 */
+            scrollbar-width: none; 
+            -webkit-overflow-scrolling: touch;
+        }
+        .gallery-sub-tabs-container::-webkit-scrollbar { display: none; }
+        
+        .gal-sub-tab {
+            padding: 8px 16px;
+            background: var(--color-card-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #888;
+            cursor: pointer;
+            white-space: nowrap; /* 文字不換行 */
+            flex-shrink: 0;      /* 標籤不被壓縮 */
+            transition: all 0.2s;
+        }
+        .gal-sub-tab.active {
+            background: rgba(118, 200, 70, 0.15); /* 淺綠底色 */
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+        
+        /* 深色模式適配 */
+        body.dark-mode .gal-sub-tab { background: #222; border-color: #333; color: #888; }
+        body.dark-mode .gal-sub-tab.active { background: rgba(118, 200, 70, 0.2); color: var(--color-primary); border-color: var(--color-primary); }
+
+
     </style>
 </body>
 </html>
