@@ -6576,6 +6576,20 @@ window.toggleActorTypeLabel = function() {
                 </div>
             `;
         }
+        // 2. 點擊次分類標籤 (修復：補回被遺漏的點擊切換功能)
+        window.selectGallerySubTab = function(subId, btnEl) {
+            currentGalSub = subId;
+            // 移除其他按鈕的 active 狀態
+            const btns = document.getElementById('gallery-sub-tabs').children;
+            for(let i=0; i<btns.length; i++) {
+                btns[i].classList.remove('active');
+            }
+            // 讓當前點擊的按鈕亮起來
+            btnEl.classList.add('active');
+            
+            // 重新渲染下方的卡片
+            renderGalleryContent();
+        };
 
         // 開啟卡片大圖 (借用你原本相簿的 photo-view-modal)
         window.openGalleryViewer = function(url) {
@@ -6916,12 +6930,14 @@ window.toggleActorTypeLabel = function() {
         .gal-sub-tab-avatar {
             width: 22px; height: 22px; border-radius: 50%; object-fit: cover;
             border: 1px solid rgba(0,0,0,0.1); background: #eee;
+            box-sizing: content-box; /* 🌟 修復：確保圖片大小絕對不變，不被邊框往內擠壓 */
         }
         
         .gallery-subtitle-avatar {
             width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
             border: 1px solid rgba(0,0,0,0.1); background: #eee;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-sizing: content-box; /* 🌟 修復：確保圖片大小絕對不變 */
         }
 
         /* 🌟 雙人頭像的「重疊」魔法 */
