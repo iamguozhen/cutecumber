@@ -6441,35 +6441,46 @@ window.toggleActorTypeLabel = function() {
             subTabsContainer.innerHTML = '';
             
             if (mode === 'character') {
-                // 👨‍💼 【抓出所有的角色】(從 ROOMMATES 抓，保證沒出卡片的人也會出現)
+                // 👨‍💼 【抓出所有的角色】(合併相同卡池的頭像)
                 const uniquePools = [];
                 ROOMMATES.forEach(r => {
-                    // 如果有綁定卡池就用卡池 ID，沒有就用角色本身 ID
                     const pid = r.cardPoolId || r.id; 
-                    if (!uniquePools.find(p => p.id === pid)) {
+                    const existingPool = uniquePools.find(p => p.id === pid);
+                    
+                    if (!existingPool) {
                         uniquePools.push({
                             id: pid,
-                            name: pid === 'duo_shared' ? 'David & Nicholas' : r.name
+                            name: pid === 'duo_shared' ? 'David & Nicholas' : r.name,
+                            avatars: [r.avatar || ''] // 🌟 改用陣列儲存
                         });
+                    } else {
+                        // 如果是同一個池子（雙人組），就把第二個人的頭像也塞進陣列
+                        if (r.avatar && !existingPool.avatars.includes(r.avatar)) {
+                            existingPool.avatars.push(r.avatar);
+                        }
                     }
                 });
                 
-                // 建立橫向標籤
+                // 建立橫向標籤 (組合多張圖片)
                 uniquePools.forEach(pool => {
                     const btn = document.createElement('button');
                     btn.className = 'gal-sub-tab';
-                    btn.textContent = pool.name;
+                    
+                    // 🌟 將陣列裡的頭像全部印出來
+                    let imgHtml = pool.avatars.filter(a => a).map(a => `<img src="${a}" class="gal-sub-tab-avatar" onerror="this.src='${DEFAULT_AVATAR}'">`).join('');
+                    
+                    btn.innerHTML = `<div style="display:flex; align-items:center; margin-right:2px;">${imgHtml}</div> <span>${pool.name}</span>`;
+                    
                     btn.onclick = () => selectGallerySubTab(pool.id, btn);
                     subTabsContainer.appendChild(btn);
                 });
                 
-                // 預設選中第一個角色
                 if(uniquePools.length > 0) {
                     currentGalSub = uniquePools[0].id;
                     subTabsContainer.children[0].classList.add('active');
                 }
             } else {
-                // 🎭 【抓出所有的主題】(從實際存在的卡片抓)
+                // 🎭 【抓出所有的主題】
                 let themes = [...new Set(GACHA_CARDS.map(c => c.theme))];
                 if(themes.length === 0) themes = ['尚未解鎖主題'];
                 
@@ -6487,31 +6498,16 @@ window.toggleActorTypeLabel = function() {
                 }
             }
             
-            // 渲染內容
             renderGalleryContent();
         };
 
-        // 2. 點擊次分類標籤
-        window.selectGallerySubTab = function(subId, btnEl) {
-            currentGalSub = subId;
-            // 移除其他按鈕的 active 狀態
-            const btns = document.getElementById('gallery-sub-tabs').children;
-            for(let i=0; i<btns.length; i++) btns[i].classList.remove('active');
-            // 把自己變成 active
-            btnEl.classList.add('active');
-            
-            // 重新渲染畫面
-            renderGalleryContent();
-        };
-
-        // 3. 渲染該標籤底下的卡片
+        // 3. 渲染該標籤底下的卡片 (第二個不用動)
         window.renderGalleryContent = function() {
             const container = document.getElementById('gallery-container');
             container.innerHTML = '';
             let cardsToShow = [];
             
             if (currentGalMode === 'character') {
-                // 過濾出這個角色的卡片
                 cardsToShow = GACHA_CARDS.filter(c => c.poolId === currentGalSub);
                 
                 if (cardsToShow.length === 0) {
@@ -6523,7 +6519,6 @@ window.toggleActorTypeLabel = function() {
                     return;
                 }
                 
-                // 依主題分群顯示
                 const themes = [...new Set(cardsToShow.map(c => c.theme))];
                 themes.forEach(theme => {
                     let html = `<div class="gallery-sub-title">${theme}</div><div class="card-grid">`;
@@ -6534,15 +6529,25 @@ window.toggleActorTypeLabel = function() {
                 });
                 
             } else {
-                // 過濾出這個主題的卡片
                 cardsToShow = GACHA_CARDS.filter(c => c.theme === currentGalSub);
                 if (cardsToShow.length === 0) return;
                 
-                // 依角色分群顯示
                 const pids = [...new Set(cardsToShow.map(c => c.poolId))];
                 pids.forEach(pid => {
-                    let charName = pid === 'duo_shared' ? 'David&Nicholas' : (ROOMMATES.find(r => (r.cardPoolId || r.id) === pid)?.name || '未知');
-                    let html = `<div class="gallery-sub-title">👤 ${charName}</div><div class="card-grid">`;
+                    // 🌟 找出該卡池的【所有】角色資料
+                    const roomies = ROOMMATES.filter(r => (r.cardPoolId || r.id) === pid);
+                    let charName = pid === 'duo_shared' ? 'David & Nicholas' : (roomies[0]?.name || '未知');
+                    
+                    // 🌟 組合所有人的頭像 (印出兩個 img)
+                    let imgHtml = '';
+                    if (roomies.length > 0) {
+                        imgHtml = roomies.map(r => r.avatar ? `<img src="${r.avatar}" class="gallery-subtitle-avatar" onerror="this.src='${DEFAULT_AVATAR}'">` : '').join('');
+                    } else {
+                        imgHtml = '👤';
+                    }
+                    
+                    let html = `<div class="gallery-sub-title"><div style="display:flex; align-items:center; margin-right:4px;">${imgHtml}</div> ${charName}</div><div class="card-grid">`;
+                    
                     const charCards = cardsToShow.filter(c => c.poolId === pid);
                     charCards.forEach(card => html += generateCardHtml(card));
                     html += `</div>`;
@@ -6874,7 +6879,63 @@ window.toggleActorTypeLabel = function() {
         .gacha-card-front::after { content: '點擊翻牌'; color: white; font-size: 20px; font-weight: bold; letter-spacing: 2px; margin-top: 20px; animation: pulseText 1.5s infinite; }
         .gacha-card-back { background: #fff; transform: rotateY(180deg); border: 4px solid var(--color-gold); overflow: hidden; }
         @keyframes pulseText { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    
+        /* === 圖鑑小頭像專用樣式 === */
+        
+        /* 1. 讓橫向標籤變成 Flex 排版，文字跟圖片才能水平對齊 */
+        .gal-sub-tab {
+            display: flex !important;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* 2. 標籤內的小頭像 */
+        .gal-sub-tab-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: #eee;
+        }
+        
+        /* 3. 主題分類「標題」旁邊的小頭像 */
+        .gallery-subtitle-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: #eee;
+            margin-right: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        /* === 圖鑑小頭像專用樣式 (雙人疊加版) === */
+        .gal-sub-tab { display: flex !important; align-items: center; gap: 6px; }
+        
+        .gal-sub-tab-avatar {
+            width: 22px; height: 22px; border-radius: 50%; object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.1); background: #eee;
+        }
+        
+        .gallery-subtitle-avatar {
+            width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.1); background: #eee;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
 
+        /* 🌟 雙人頭像的「重疊」魔法 */
+        .gal-sub-tab-avatar + .gal-sub-tab-avatar,
+        .gallery-subtitle-avatar + .gallery-subtitle-avatar {
+            margin-left: -6px; /* 👈 從 -10px 改成 -6px，露出更多臉部 */
+            border: 2px solid var(--color-card-bg) !important; 
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 深色模式的疊加邊框適配 */
+        body.dark-mode .gal-sub-tab-avatar + .gal-sub-tab-avatar { border-color: #222 !important; }
+        body.dark-mode .gallery-subtitle-avatar + .gallery-subtitle-avatar { border-color: var(--color-bg) !important; }
 
     </style>
 </body>
