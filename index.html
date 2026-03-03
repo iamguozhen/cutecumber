@@ -6397,15 +6397,32 @@ window.toggleActorTypeLabel = function() {
             for (const theme in CARD_CONFIG[poolId]) {
                 const data = CARD_CONFIG[poolId][theme];
                 for (let i = 1; i <= data.count; i++) {
+                    const basePath = `./images/roommates/${poolId}/cards/${data.prefix}_${i}`;
                     GACHA_CARDS.push({
                         id: `c_${poolId}_${data.prefix}_${i}`, 
                         poolId: poolId,
                         theme: theme,
-                        url: `./images/roommates/${poolId}/cards/${data.prefix}_${i}.JPG`
+                        basePath: basePath, // 🌟 儲存「沒有副檔名」的純路徑
+                        url: `${basePath}.JPG` // 預設值 (保留給舊程式碼相容)
                     });
                 }
             }
         }
+
+        // 🌟 自動偵測副檔名的魔法函式 (遇到破圖會自動切換副檔名重試)
+        window.handleImageFallback = function(imgEl, basePath) {
+            // 定義要嘗試的副檔名順序 (大寫優先，再來小寫)
+            const exts = ['.JPG', '.PNG', '.jpg', '.png', '.jpeg'];
+            let currentIdx = parseInt(imgEl.dataset.extIdx || '0');
+            currentIdx++; // 嘗試下一個副檔名
+            
+            if (currentIdx < exts.length) {
+                imgEl.dataset.extIdx = currentIdx;
+                imgEl.src = basePath + exts[currentIdx];
+            } else {
+                imgEl.onerror = null; // 都找不到就放棄，避免無窮迴圈
+            }
+        };
 
 
         // === 2. 視圖切換邏輯 (修補原本的 switchStatsView) ===
@@ -6560,21 +6577,21 @@ window.toggleActorTypeLabel = function() {
         function generateCardHtml(card) {
             const isUnlocked = gachaData.unlocked[card.id];
             
-            // 點擊動作：已解鎖看大圖，未解鎖跳提示
-            const clickAction = isUnlocked 
-                ? `openGalleryViewer('${card.url}')` 
-                : `showAlert('尚未解鎖！\\n請在首頁選擇該角色並累積發射次數來抽取。')`;
-            
-            // 👇 關鍵邏輯：解鎖了就顯示真實寫真圖 (card.url)，還沒解鎖就顯示你的專屬封面！
-            const displayImg = isUnlocked 
-                ? card.url 
-                : './images/ui/card_locked.JPG'; // 確保這裡的副檔名跟你的圖一樣哦！
-                
-            return `
-                <div class="gacha-card ${isUnlocked ? '' : 'locked'}" onclick="${clickAction}">
-                    <img src="${displayImg}" class="gacha-card-img" loading="lazy">
-                </div>
-            `;
+            if (isUnlocked) {
+                // 已解鎖：套用自動偵測副檔名機制，並把 basePath 傳給大圖播放器
+                return `
+                    <div class="gacha-card" onclick="openGalleryViewer('${card.basePath}')">
+                        <img src="${card.basePath}.JPG" data-ext-idx="0" onerror="handleImageFallback(this, '${card.basePath}')" class="gacha-card-img" loading="lazy">
+                    </div>
+                `;
+            } else {
+                // 未解鎖：顯示預設封面，並跳出提示
+                return `
+                    <div class="gacha-card locked" onclick="showAlert('尚未解鎖！\\n請在首頁選擇該角色並累積發射次數來抽取。')">
+                        <img src="./images/ui/card_locked.JPG" class="gacha-card-img" loading="lazy">
+                    </div>
+                `;
+            }
         }
         // 2. 點擊次分類標籤 (修復：補回被遺漏的點擊切換功能)
         window.selectGallerySubTab = function(subId, btnEl) {
@@ -6591,9 +6608,13 @@ window.toggleActorTypeLabel = function() {
             renderGalleryContent();
         };
 
-        // 開啟卡片大圖 (借用你原本相簿的 photo-view-modal)
-        window.openGalleryViewer = function(url) {
-            document.getElementById('pv-img').src = url;
+        // 開啟卡片大圖 (支援多副檔名偵測)
+        window.openGalleryViewer = function(basePath) {
+            const imgEl = document.getElementById('pv-img');
+            imgEl.dataset.extIdx = 0; // 重置嘗試次數
+            imgEl.src = basePath + '.JPG'; // 第一步先試 JPG
+            imgEl.onerror = function() { handleImageFallback(this, basePath); }; // 失敗就自動換格式
+            
             // 隱藏刪除按鈕 (圖鑑的圖片不能刪)
             document.getElementById('pv-btn-delete').style.display = 'none';
             document.getElementById('photo-view-modal').classList.add('active');
@@ -6688,7 +6709,13 @@ window.toggleActorTypeLabel = function() {
 
             // 準備卡背與圖片 (重置翻牌狀態)
             document.getElementById('gacha-card-inner').style.transform = 'rotateY(0deg)';
-            document.getElementById('gacha-result-img').src = currentGachaCard.url;
+            
+            // 🌟 抽卡時的圖片也套用自動偵測副檔名
+            const gachaImg = document.getElementById('gacha-result-img');
+            gachaImg.dataset.extIdx = 0;
+            gachaImg.src = currentGachaCard.basePath + '.JPG';
+            gachaImg.onerror = function() { handleImageFallback(this, currentGachaCard.basePath); };
+            
             document.getElementById('gacha-close-btn').style.display = 'none';
             document.getElementById('gacha-modal').classList.add('active');
         };
