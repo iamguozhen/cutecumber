@@ -2817,12 +2817,37 @@ window.compressImage = function(f) {
         let roommateTimer = null;
         let currentRoommateState = 'default'; // 紀錄當前狀態，防止亂切換
 
+        // 預先載入圖片的魔法陣
+        window.preloadImages = function(srcArray) {
+            srcArray.forEach(src => {
+                if(src) {
+                    const img = new Image();
+                    img.src = src;
+                }
+            });
+        };
+
         function initRoommateSystem() {
             let selectedId = localStorage.getItem('cuteCumberRoommate');
             if (!selectedId || !ROOMMATES.find(r => r.id === selectedId)) {
                 selectedId = ROOMMATES[0].id;
                 localStorage.setItem('cuteCumberRoommate', selectedId);
             }
+            
+            // 🌟 啟動時，偷偷把這個角色的所有狀態圖、以及抽卡的卡背預先載入到手機記憶體！
+            const char = ROOMMATES.find(r => r.id === selectedId);
+            if(char) {
+                let imagesToPreload = [...char.defaults];
+                if(char.high) imagesToPreload.push(char.high);
+                if(char.doubleHigh) imagesToPreload.push(char.doubleHigh);
+                if(char.angry) imagesToPreload.push(char.angry);
+                // 把卡背也加進去預載
+                imagesToPreload.push('./images/ui/card_cover.JPG');
+                imagesToPreload.push('./images/ui/card_locked.JPG');
+                
+                preloadImages(imagesToPreload);
+            }
+
             updateRoommateDisplay();
         }
         // 核心邏輯：更新房間圖片與狀態
@@ -6586,14 +6611,14 @@ window.toggleActorTypeLabel = function() {
                 // 已解鎖：套用自動偵測副檔名機制，並把 basePath 傳給大圖播放器
                 return `
                     <div class="gacha-card" onclick="openGalleryViewer('${card.basePath}')">
-                        <img src="${card.basePath}.JPG" data-ext-idx="0" onerror="handleImageFallback(this, '${card.basePath}')" class="gacha-card-img" loading="lazy">
+                        <img src="${card.basePath}.JPG" data-ext-idx="0" onerror="handleImageFallback(this, '${card.basePath}')" class="gacha-card-img">
                     </div>
                 `;
             } else {
                 // 未解鎖：顯示預設封面，並跳出提示
                 return `
                     <div class="gacha-card locked" onclick="showAlert('尚未解鎖！\\n請在首頁選擇該角色並累積發射次數來抽取。')">
-                        <img src="./images/ui/card_locked.JPG" class="gacha-card-img" loading="lazy">
+                        <img src="./images/ui/card_locked.JPG" class="gacha-card-img">
                     </div>
                 `;
             }
