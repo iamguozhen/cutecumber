@@ -1,6 +1,5 @@
-// 👇 每次更新程式碼後，請務必修改這裡的版本號 (例如 v7.1 -> v7.2)
-// 這樣瀏覽器才會知道有新版本，並強制更新 Service Worker
-const CACHE_NAME = 'cutecumber-v7.2'; 
+// 👇 版本號更新為 v7.3，強迫手機洗掉舊的錯誤快取
+const CACHE_NAME = 'cutecumber-v7.3'; 
 
 // 核心檔案：App 的骨架，這些一定要存
 const ASSETS_TO_CACHE = [
@@ -34,7 +33,7 @@ self.addEventListener('activate', (event) => {
         keyList.map((key) => {
           if (key !== CACHE_NAME) {
             console.log('[Service Worker] Removing old cache', key);
-            return caches.delete(key);
+            return caches.delete(key); // 🌟 刪除舊版快取，騰出手機空間
           }
         })
       );
@@ -51,18 +50,19 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // === 策略 A：圖片資源 (Cache First - 快取優先) ===
-  // 如果是圖片，先看快取有沒有。有就直接用 (秒開)，沒有才去網路下載並存起來。
   if (event.request.destination === 'image' || url.pathname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
       event.respondWith(
           caches.match(event.request).then((cachedResponse) => {
-              // 1. 如果快取有，直接回傳 (離線顯示的關鍵！)
+              // 1. 如果快取有，直接回傳 (離線顯示且秒開的關鍵！)
               if (cachedResponse) {
                   return cachedResponse;
               }
               // 2. 如果快取沒有，去網路抓
               return fetch(event.request).then((networkResponse) => {
-                  // 檢查回應是否有效 (跨域圖片 status 可能是 0，這是正常的 opaque response)
-                  if (!networkResponse || networkResponse.type === 'error') {
+                  
+                  // 🌟 【防呆修正】只快取成功的圖片 (status 200) 或跨域圖片 (opaque)
+                  // 絕對不把 404 (找不到檔案) 的錯誤回應存進快取！
+                  if (!networkResponse || (networkResponse.status !== 200 && networkResponse.type !== 'opaque')) {
                       return networkResponse;
                   }
                   
@@ -74,12 +74,11 @@ self.addEventListener('fetch', (event) => {
                   
                   return networkResponse;
               }).catch(() => {
-                  // 圖片下載失敗 (真的沒網路且沒快取)，可以回傳一個預設的破圖佔位符 (選填)
-                  // return caches.match('./icons/icon-192.png'); 
+                  // 圖片下載失敗，避免拋出紅字錯誤
               });
           })
       );
-      return; // 結束，不執行下面的策略 B
+      return; // 圖片處理完畢，結束
   }
 
   // === 策略 B：其他資源 (HTML/JS/API) (Network First - 網路優先) ===
