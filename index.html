@@ -2621,45 +2621,6 @@ window.compressImage = function(f) {
             updateRoommateDisplay();
         };
 
-        // 優化跳轉邏輯 (解決數據頁點擊無反應)
-        window.jumpToTarget = function(target) {
-            // 1. 關閉所有 Modal
-            closeDetailModal(); 
-            document.getElementById('achievement-modal').classList.remove('active');
-            
-            // 2. 切換到底部 "Driver" 分頁
-            const driverTab = document.querySelector('.tab-item[data-target="driver"]');
-            if(driverTab) driverTab.click();
-            
-            // 3. 延遲執行，等待 Tab 切換動畫完成
-            setTimeout(() => {
-                if (target.type === 'partner') {
-                    // 切換到性夥伴模式 -> 打開詳情
-                    if(window.switchDriverMode) window.switchDriverMode('partner');
-                    setTimeout(() => {
-                        if(window.showPartnerDetail) window.showPartnerDetail(target.name);
-                    }, 50);
-                    
-                } else if (target.type === 'actor') {
-                    // 切換到雲端情人模式 -> 打開詳情
-                    if(window.switchDriverMode) window.switchDriverMode('actor');
-                    setTimeout(() => {
-                        if(window.showDriverDetail) showDriverDetail(target.id);
-                    }, 50);
-                    
-                } else if (target.type === 'video') {
-                    // 切換到雲端情人模式 -> 打開詳情 -> 打開影片
-                    if(window.switchDriverMode) window.switchDriverMode('actor');
-                    setTimeout(() => {
-                        if(window.showDriverDetail) showDriverDetail(target.parentId);
-                        setTimeout(() => {
-                            if(window.openVideoDetail) openVideoDetail(target.parentId, target.id);
-                        }, 300); // 等待詳情頁渲染
-                    }, 50);
-                }
-            }, 100);
-        };
-
         // === 男子宿舍資料庫 (使用相對路徑) ===
         const ROOMMATES = [
             {
@@ -3125,35 +3086,6 @@ function renderRankList(containerId, list) {
         el.appendChild(btn);
     }
 }
-
-// --- 3. 列表項目生成函式 ---
-function createRankItem(item, idx, max) {
-    const div = document.createElement('div');
-    div.className = 'rank-item';
-    div.onclick = () => jumpToTarget({ 
-        type: item.type, 
-        id: item.data.id, 
-        parentId: item.data.parentId,
-        name: item.data.name || item.name
-    });
-    
-    const rankClass = idx < 3 ? `top-${idx+1}` : '';
-    const imgClass = item.type === 'video' ? 'video-type' : '';
-    const imgHtml = item.img ? `<img src="${item.img}" class="rank-img ${imgClass}">` : `<div class="rank-img ${imgClass}" style="background:#eee;display:flex;align-items:center;justify-content:center;">${item.type==='actor'?'👤':'🎬'}</div>`;
-    const percent = (item.count / max) * 100;
-
-    div.innerHTML = `
-        <div class="rank-num ${rankClass}">${idx + 1}</div>
-        ${imgHtml}
-        <div class="rank-info">
-            <div class="rank-name">${item.name}</div>
-            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${percent}%"></div></div>
-        </div>
-        <div class="rank-count">${item.count}次</div>
-    `;
-    return div;
-}
-
 
         function createRankItem(item, idx, max) {
             const div = document.createElement('div');
@@ -4849,90 +4781,6 @@ window.toggleActorTypeLabel = function() {
                 renderPartnerGrid(); // 呼叫性夥伴渲染
             }
         };
-
-        // 渲染演員列表 (含合輯樣式區分) - 最終修正版
-        window.renderActorList = function() {
-            // 🔴 確認使用正確的 ID: 'actor-grid'
-            const container = document.getElementById('actor-grid');
-            if (!container) return; 
-            container.innerHTML = '';
-
-            // 1. 取得排序設定
-            const sortSelect = document.getElementById('driver-sort-select'); 
-            const sortMode = sortSelect ? sortSelect.value : 'updated';
-            
-            // 2. 複製陣列並排序
-            let list = [...actorProfiles];
-            
-            // 搜尋過濾
-            const searchInput = document.getElementById('driver-search-input');
-            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-            
-            if(searchTerm) {
-                list = list.filter(a => {
-                    const nameMatch = (a.name || '').toLowerCase().includes(searchTerm);
-                    const bioMatch = (a.bio || '').toLowerCase().includes(searchTerm);
-                    const tagMatch = (a.tags && a.tags.some(t => t.toLowerCase().includes(searchTerm)));
-                    // 深度搜尋：影片標題
-                    const videoMatch = (a.videos || []).some(v => v.title.toLowerCase().includes(searchTerm));
-                    
-                    return nameMatch || bioMatch || tagMatch || videoMatch;
-                });
-            }
-
-            // 排序邏輯
-            if (sortMode === 'updated') {
-                list.sort((a,b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
-            } else if (sortMode === 'name') {
-                list.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
-            } else if (sortMode === 'count') {
-                list.sort((a,b) => (b.videos ? b.videos.length : 0) - (a.videos ? a.videos.length : 0));
-            } else if (sortMode === 'custom') {
-                list.sort((a,b) => {
-                    const orderA = (a.tierOrder !== undefined) ? a.tierOrder : 99999;
-                    const orderB = (b.tierOrder !== undefined) ? b.tierOrder : 99999;
-                    return orderA - orderB;
-                });
-            }
-
-            // 3. 渲染 HTML
-            if (list.length === 0) {
-                 container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#999;padding:40px;">找不到相關資料 🐢</div>';
-                 return;
-            }
-
-            list.forEach(actor => {
-                const div = document.createElement('div');
-                
-                // 加入 'is-collection' 類別以便 CSS 做圓角與堆疊效果
-                div.className = `actor-card ${actor.isCollection ? 'is-collection' : ''}`;
-                
-                // 為了拖曳排序功能
-                div.dataset.id = actor.id;
-                
-                // 點擊事件：開啟詳情
-                div.onclick = () => showDriverDetail(actor.id);
-                
-                // 圖片處理
-                const avatarUrl = actor.avatar || DEFAULT_AVATAR;
-                
-                // 名字前加圖示 (資料夾 vs 演員)
-                const nameIcon = '';
-                
-                // 計算影片數
-                const vidCount = actor.videos ? actor.videos.length : 0;
-
-                div.innerHTML = `
-                    <div class="avatar-container">
-                        <img src="${avatarUrl}" class="actor-avatar" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
-                        ${actor.isCollection ? '<div class="collection-badge">📂</div>' : ''}
-                    </div>
-                    <div class="actor-name">${actor.name}</div>
-                    <div class="actor-count" style="font-size:11px; color:#999;">${vidCount} 部影片</div>
-                `;
-                container.appendChild(div);
-            });
-        };
         
         // 渲染演員列表 (含合輯樣式區分) - 修復版
         window.renderActorList = function() {
@@ -5314,30 +5162,6 @@ window.toggleActorTypeLabel = function() {
                     img.style.display = 'block';
                 }
             }
-        };
-
-        window.addPartnerToState = function(mode) {
-            const prefix = mode === 'new' ? '' : 'edit-';
-            const nameInput = document.getElementById(prefix + 'input-partner-name');
-            const name = nameInput.value.trim();
-            
-            if(!name) { showAlert('請輸入夥伴名字'); return; }
-            
-            const newP = { name: name, photo: currentPartnerPhoto };
-            
-            if(mode === 'new') {
-                tempPartnerList.push(newP);
-                renderPartnerTags('new');
-            } else {
-                editTempPartnerList.push(newP);
-                renderPartnerTags('edit');
-            }
-            
-            // Reset Input
-            nameInput.value = '';
-            currentPartnerPhoto = "";
-            document.getElementById(prefix + 'preview-partner-photo').style.display = 'none';
-            document.getElementById(prefix + 'input-partner-photo').value = ""; // clear file
         };
 
         window.renderPartnerTags = function(mode) {
